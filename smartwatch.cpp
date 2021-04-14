@@ -110,37 +110,40 @@ private:
 
     // Endpoint to configure the low battery setting
     void setLowBatteryRoute(const Rest::Request& request, Http::ResponseWriter response){
-        string lowBattery = "lowBattery";
+        string settingName = "lowBattery";
 
         // This is a guard that prevents editing the same value by two concurent threads. 
         Guard guard(SmartwatchLock);
 
-        string val = "";
+        unsigned val = 0;
         if (request.hasParam(":value")) {
             auto value = request.param(":value");
-            val = value.as<string>();
+            val = value.as<unsigned>();
         }
 
         // Setting the Smartwatch's setting to value
-        int setResponse = mwv.setLowBatterySetting(val);
+        int setResponse = swt.setLowBatterySetting(val);
 
         // Sending some confirmation or error response.
         if (setResponse == 1) {
-            response.send(Http::Code::Ok, lowBattery + " was set to " + val);
-        }
-        else {
-            response.send(Http::Code::Not_Found, lowBattery + " was not found and or '" + val + "' was not a valid value ");
+            // current battery level is less than 20%
+            response.send(Http::Code::Ok, settingName + " was set to true");
+        } else if (setResponse == 2) {
+            // current battery level is higher than 20%
+            response.send(Http::Code::Ok, settingName + " was set to false");
+        } else {
+            response.send(Http::Code::Not_Found, settingName + " was not found and or " + std::to_string(val) + " was not a valid value ");
         }
     }
 
 
     // Setting to get the settings value of the low battery setting
     void getLowBatteryRoute(const Rest::Request& request, Http::ResponseWriter response){
-        string lowBattery = "lowBattery";
+        string settingName = "lowBattery";
 
         Guard guard(SmartwatchLock);
 
-        string valueSetting = mwv.getLowBatterySetting();
+        string valueSetting = swt.getLowBatterySetting();
 
         if (valueSetting != "") {
             // In this response I also add a couple of headers,
@@ -151,19 +154,19 @@ private:
                         .add<Header::ContentType>(MIME(Text, Plain));
 
             if (std::stoi(valueSetting) == 0) {
-                response.send(Http::Code::Ok, lowBattery + " is set to " + valueSetting + ". Value 0 means setting is off.");
+                response.send(Http::Code::Ok, settingName + " setting is set to false.");
             } else {
-                response.send(Http::Code::Ok, lowBattery + " is set to " + valueSetting + ". Value 1 means setting is on.");
+                response.send(Http::Code::Ok, settingName + " setting is set to true.");
             }
         }
         else {
-            response.send(Http::Code::Not_Found, lowBattery + " was not found");
+            response.send(Http::Code::Not_Found, settingName + " was not found");
         }
     }
 
     // Endpoint to configure the lantern setting
     void setLanternRoute(const Rest::Request& request, Http::ResponseWriter response) {
-        string lantern = "lantern";
+        string settingName = "lantern";
 
         // This is a guard that prevents editing the same value by two concurent threads. 
         Guard guard(SmartwatchLock);
@@ -175,24 +178,24 @@ private:
         }
 
         // Setting the Smartwatch's setting to value
-        int setResponse = mwv.setLanternSetting(val);
+        int setResponse = swt.setLanternSetting(val);
 
         // Sending some confirmation or error response.
         if (setResponse == 1) {
-            response.send(Http::Code::Ok, lantern + " was set to " + val);
+            response.send(Http::Code::Ok, settingName + " was set to " + val);
         }
         else {
-            response.send(Http::Code::Not_Found, lantern + " was not found and or '" + val + "' was not a valid value ");
+            response.send(Http::Code::Not_Found, settingName + " was not found and or '" + val + "' was not a valid value ");
         }
     }
 
     // Setting to get the settings value of the lantern setting
     void getLanternRoute(const Rest::Request& request, Http::ResponseWriter response) {
-        string lantern = "lantern";
+        string settingName = "lantern";
 
         Guard guard(SmartwatchLock);
 
-        string valueSetting = mwv.getLanternSetting();
+        string valueSetting = swt.getLanternSetting();
 
         if (valueSetting != "") {
             using namespace Http;
@@ -201,13 +204,13 @@ private:
                         .add<Header::ContentType>(MIME(Text, Plain));
 
             if (std::stoi(valueSetting) == 0) {
-                response.send(Http::Code::Ok, lantern + " is set to " + valueSetting + ". Value 0 means setting is off.");
+                response.send(Http::Code::Ok, settingName + " is set to " + valueSetting + ". Value 0 means setting is off.");
             } else {
-                response.send(Http::Code::Ok, lantern + " is set to " + valueSetting + ". Value 1 means setting is on.");
+                response.send(Http::Code::Ok, settingName + " is set to " + valueSetting + ". Value 1 means setting is on.");
             }
         }
         else {
-            response.send(Http::Code::Not_Found, lantern + " was not found");
+            response.send(Http::Code::Not_Found, settingName + " was not found");
         }
     }
 
@@ -217,16 +220,21 @@ private:
         explicit Smartwatch(){ }
 
         // Setter for the low battery setting
-        int setLowBatterySetting(std::string value){
-            lowBattery.name = "lowBattery";
-            if(value == "true"){
+        int setLowBatterySetting(unsigned value){
+            // if battery is less than 20%
+            bool isLessThan20 = value < lowBattery.batteryMilliAmpH * 0.2;
+
+            if(isLessThan20){
                 lowBattery.value = true;
                 return 1;
             }
-            if(value == "false"){
+            
+            if (!isLessThan20) {
                 lowBattery.value = false;
-                return 1;
+                return 2;
             }
+
+            // otherwise we received a bad value
             return 0;
         }
 
@@ -237,7 +245,6 @@ private:
 
         // Setter for the lantern setting
         int setLanternSetting(std::string value){
-            lantern.name = "lantern";
             if(value == "true"){
                 lantern.value = true;
                 return 1;
@@ -255,11 +262,19 @@ private:
         }
     
     private:
-        // Defining and instantiating settings.
-        struct boolSetting {
-            std::string name;
-            bool value;
-        } lowBattery, lantern;
+        // Defining lantern setting
+        struct lanternSetting {
+            std::string name = "lantern";
+            bool value = false;
+        } lantern;
+
+        // Defining lowBattery setting
+        struct lowBatterySetting {
+            std::string name = "lowBattery";
+            unsigned batteryMilliAmpH = 3600;
+            bool value = false;
+        } lowBattery;
+
     };
 
     // Create the lock which prevents concurrent editing of the same variable
@@ -268,7 +283,7 @@ private:
     Lock SmartwatchLock;
 
     // Instance of the Smartwatch model
-    Smartwatch mwv;
+    Smartwatch swt;
 
     // Defining the httpEndpoint and a router.
     std::shared_ptr<Http::Endpoint> httpEndpoint;
