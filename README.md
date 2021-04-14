@@ -99,6 +99,12 @@ Number 1 should display.
 
 Now you have the server running
 
+#### Functionality no. 1
+
+#### Functionality no. 2
+
+#### Functionality no. 3
+
 #### Functionality no. 4
 
 ```
@@ -130,6 +136,39 @@ lowBattery was set to false
 ```
 curl -X GET http://localhost:9080/settings/lowBattery/
 lowBattery is set to 0. Value 0 means setting is off.
+```
+
+#### Functionality no. 5
+
+```
+5. Dacă se apasă un buton lateral de pe ceas, atunci ecranul ceasului să devină alb (simulează o lanternă)
+```
+
+Routes:
+
+```
+POST http://localhost:9080/settings/lantern/:value
+GET  http://localhost:9080/settings/lantern/
+```
+
+```
+curl -X POST http://localhost:9080/settings/lantern/true
+lantern was set to true
+```
+
+```
+curl -X GET http://localhost:9080/settings/lantern/ 
+lantern is set to 1. Value 1 means setting is on.
+```
+
+```
+curl -X POST http://localhost:9080/settings/lantern/false
+lantern was set to false
+```
+
+```
+curl -X GET http://localhost:9080/settings/lantern/ 
+lantern is set to 0. Value 0 means setting is off.
 ```
 
 ## License

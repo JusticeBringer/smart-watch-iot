@@ -85,12 +85,16 @@ private:
     void setupRoutes() {
         using namespace Rest;
         // Defining various endpoints
-        // Generally say that when http://localhost:9080/ready is called, the handleReady function should be called. 
+        // Generally say that when http://localhost:9080/settings/lowBattery/ is called, the getLowBatteryRoute function should be called.
+
         Routes::Get(router, "/ready", Routes::bind(&Generic::handleReady));
         Routes::Get(router, "/auth", Routes::bind(&SmartwatchEndpoint::doAuth, this));
 
         Routes::Post(router, "/settings/lowBattery/:value", Routes::bind(&SmartwatchEndpoint::setLowBatteryRoute, this));
         Routes::Get(router, "/settings/lowBattery/", Routes::bind(&SmartwatchEndpoint::getLowBatteryRoute, this));
+
+        Routes::Post(router, "/settings/lantern/:value", Routes::bind(&SmartwatchEndpoint::setLanternRoute, this));
+        Routes::Get(router, "/settings/lantern/", Routes::bind(&SmartwatchEndpoint::getLanternRoute, this));
     }
 
     
@@ -157,6 +161,56 @@ private:
         }
     }
 
+    // Endpoint to configure the lantern setting
+    void setLanternRoute(const Rest::Request& request, Http::ResponseWriter response) {
+        string lantern = "lantern";
+
+        // This is a guard that prevents editing the same value by two concurent threads. 
+        Guard guard(SmartwatchLock);
+
+        string val = "";
+        if (request.hasParam(":value")) {
+            auto value = request.param(":value");
+            val = value.as<string>();
+        }
+
+        // Setting the Smartwatch's setting to value
+        int setResponse = mwv.setLanternSetting(val);
+
+        // Sending some confirmation or error response.
+        if (setResponse == 1) {
+            response.send(Http::Code::Ok, lantern + " was set to " + val);
+        }
+        else {
+            response.send(Http::Code::Not_Found, lantern + " was not found and or '" + val + "' was not a valid value ");
+        }
+    }
+
+    // Setting to get the settings value of the lantern setting
+    void getLanternRoute(const Rest::Request& request, Http::ResponseWriter response) {
+        string lantern = "lantern";
+
+        Guard guard(SmartwatchLock);
+
+        string valueSetting = mwv.getLanternSetting();
+
+        if (valueSetting != "") {
+            using namespace Http;
+            response.headers()
+                        .add<Header::Server>("pistache/0.1")
+                        .add<Header::ContentType>(MIME(Text, Plain));
+
+            if (std::stoi(valueSetting) == 0) {
+                response.send(Http::Code::Ok, lantern + " is set to " + valueSetting + ". Value 0 means setting is off.");
+            } else {
+                response.send(Http::Code::Ok, lantern + " is set to " + valueSetting + ". Value 1 means setting is on.");
+            }
+        }
+        else {
+            response.send(Http::Code::Not_Found, lantern + " was not found");
+        }
+    }
+
     // Defining the class of the Smartwatch. It should model the entire configuration of the Smartwatch
     class Smartwatch {
     public:
@@ -180,13 +234,32 @@ private:
         string getLowBatterySetting(){
             return std::to_string(lowBattery.value);
         }
+
+        // Setter for the lantern setting
+        int setLanternSetting(std::string value){
+            lantern.name = "lantern";
+            if(value == "true"){
+                lantern.value = true;
+                return 1;
+            }
+            if(value == "false"){
+                lantern.value = false;
+                return 1;
+            }
+            return 0;
+        }
+
+        // Getter for the lantern setting
+        string getLanternSetting(){
+            return std::to_string(lantern.value);
+        }
     
     private:
         // Defining and instantiating settings.
-        struct boolSetting{
+        struct boolSetting {
             std::string name;
             bool value;
-        }lowBattery;
+        } lowBattery, lantern;
     };
 
     // Create the lock which prevents concurrent editing of the same variable
