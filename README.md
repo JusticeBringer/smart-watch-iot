@@ -48,7 +48,7 @@ Note that in this compilation process, the order of the libraries is important.
 To start the server run
 
 ```
-./smartwatch`
+./smartwatch
 ```
 
 Your server should display the number of cores being used and no errors, something like
