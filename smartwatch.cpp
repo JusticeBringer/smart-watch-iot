@@ -118,7 +118,7 @@ private:
         }
 
         // Setting the Smartwatch's setting to value
-        int setResponse = mwv.setLowBatterySetting(lowBattery, val);
+        int setResponse = mwv.setLowBatterySetting(val);
 
         // Sending some confirmation or error response.
         if (setResponse == 1) {
@@ -136,11 +136,11 @@ private:
 
         Guard guard(SmartwatchLock);
 
-        string valueSetting = mwv.getLowBatterySetting(lowBattery);
+        string valueSetting = mwv.getLowBatterySetting();
 
         if (valueSetting != "") {
-
-            // In this response I also add a couple of headers, describing the server that sent this response, and the way the content is formatted.
+            // In this response I also add a couple of headers,
+            // describing the server that sent this response, and the way the content is formatted.
             using namespace Http;
             response.headers()
                         .add<Header::Server>("pistache/0.1")
@@ -162,33 +162,25 @@ private:
     public:
         explicit Smartwatch(){ }
 
-        // Setting the value for one of the settings. Hardcoded for the low battery option
-        int setLowBatterySetting(std::string name, std::string value){
-            if(name == "lowBattery"){
-                lowBattery.name = name;
-                if(value == "true"){
-                    lowBattery.value = true;
-                    return 1;
-                }
-                if(value == "false"){
-                    lowBattery.value = false;
-                    return 1;
-                }
+        // Setter for the low battery setting
+        int setLowBatterySetting(std::string value){
+            lowBattery.name = "lowBattery";
+            if(value == "true"){
+                lowBattery.value = true;
+                return 1;
+            }
+            if(value == "false"){
+                lowBattery.value = false;
+                return 1;
             }
             return 0;
         }
 
-        // Getter
-        string getLowBatterySetting(std::string name){
-            if (name == "lowBattery"){
-                return std::to_string(lowBattery.value);
-            }
-            else{
-                return "";
-            }
+        // Getter for the low battery setting
+        string getLowBatterySetting(){
+            return std::to_string(lowBattery.value);
         }
     
-    // 4. Dacă nivelul bateriei este scăzut, atunci să se aprindă un led de notificare
     private:
         // Defining and instantiating settings.
         struct boolSetting{
