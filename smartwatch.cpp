@@ -1,7 +1,19 @@
 /*
-   Rares Cristea, 12.03.2021
-   Example of a REST endpoint with routing
-   using Mathieu Stefani's example, 07 février 2016
+    Proiect IP: Smartwatch IOT (aprilie - mai 2021)
+
+    Componenta echipei:
+     - Arghire Gabriel, 342
+     - Chitu Stefan Catalin, 342
+     - Olaru Adrian, 342
+     - Simionov Marius Daniel, 342
+     
+    Functionalitati smartwatch:
+     1. Dacă este o oră fixă, atunci declanșează o vibrație
+     2. Luminozitatea ecranului să fie în funcție de luminozitatea mediului
+     3. Detectarea mișcării: dacă nu se mai fac pași pentru o perioadă lungă de timp, atunci să apară de format apel către 112
+     4. Dacă nivelul bateriei este scăzut, atunci să se aprindă un led de notificare
+     5. Dacă se apasă un buton lateral de pe ceas, atunci ecranul ceasului să devină alb (simulează o lanternă)
+
 */
 
 #include <algorithm>
