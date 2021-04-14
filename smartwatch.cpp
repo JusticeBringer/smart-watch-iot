@@ -42,10 +42,10 @@ namespace Generic {
 
 }
 
-// Definition of the MicrowaveEnpoint class 
-class MicrowaveEndpoint {
+// Definition of the SmartwatchEnpoint class 
+class SmartwatchEndpoint {
 public:
-    explicit MicrowaveEndpoint(Address addr)
+    explicit SmartwatchEndpoint(Address addr)
         : httpEndpoint(std::make_shared<Http::Endpoint>(addr))
     { }
 
@@ -75,9 +75,9 @@ private:
         // Defining various endpoints
         // Generally say that when http://localhost:9080/ready is called, the handleReady function should be called. 
         Routes::Get(router, "/ready", Routes::bind(&Generic::handleReady));
-        Routes::Get(router, "/auth", Routes::bind(&MicrowaveEndpoint::doAuth, this));
-        Routes::Post(router, "/settings/:settingName/:value", Routes::bind(&MicrowaveEndpoint::setSetting, this));
-        Routes::Get(router, "/settings/:settingName/", Routes::bind(&MicrowaveEndpoint::getSetting, this));
+        Routes::Get(router, "/auth", Routes::bind(&SmartwatchEndpoint::doAuth, this));
+        Routes::Post(router, "/settings/:settingName/:value", Routes::bind(&SmartwatchEndpoint::setSetting, this));
+        Routes::Get(router, "/settings/:settingName/", Routes::bind(&SmartwatchEndpoint::getSetting, this));
     }
 
     
@@ -91,14 +91,14 @@ private:
         response.send(Http::Code::Ok);
     }
 
-    // Endpoint to configure one of the Microwave's settings.
+    // Endpoint to configure one of the Smartwatch's settings.
     void setSetting(const Rest::Request& request, Http::ResponseWriter response){
         // You don't know what the parameter content that you receive is, but you should
         // try to cast it to some data structure. Here, I cast the settingName to string.
         auto settingName = request.param(":settingName").as<std::string>();
 
         // This is a guard that prevents editing the same value by two concurent threads. 
-        Guard guard(microwaveLock);
+        Guard guard(SmartwatchLock);
 
         
         string val = "";
@@ -107,7 +107,7 @@ private:
             val = value.as<string>();
         }
 
-        // Setting the microwave's setting to value
+        // Setting the Smartwatch's setting to value
         int setResponse = mwv.set(settingName, val);
 
         // Sending some confirmation or error response.
@@ -120,11 +120,11 @@ private:
 
     }
 
-    // Setting to get the settings value of one of the configurations of the Microwave
+    // Setting to get the settings value of one of the configurations of the Smartwatch
     void getSetting(const Rest::Request& request, Http::ResponseWriter response){
         auto settingName = request.param(":settingName").as<std::string>();
 
-        Guard guard(microwaveLock);
+        Guard guard(SmartwatchLock);
 
         string valueSetting = mwv.get(settingName);
 
@@ -143,10 +143,10 @@ private:
         }
     }
 
-    // Defining the class of the Microwave. It should model the entire configuration of the Microwave
-    class Microwave {
+    // Defining the class of the Smartwatch. It should model the entire configuration of the Smartwatch
+    class Smartwatch {
     public:
-        explicit Microwave(){ }
+        explicit Smartwatch(){ }
 
         // Setting the value for one of the settings. Hardcoded for the defrosting option
         int set(std::string name, std::string value){
@@ -185,10 +185,10 @@ private:
     // Create the lock which prevents concurrent editing of the same variable
     using Lock = std::mutex;
     using Guard = std::lock_guard<Lock>;
-    Lock microwaveLock;
+    Lock SmartwatchLock;
 
-    // Instance of the microwave model
-    Microwave mwv;
+    // Instance of the Smartwatch model
+    Smartwatch mwv;
 
     // Defining the httpEndpoint and a router.
     std::shared_ptr<Http::Endpoint> httpEndpoint;
@@ -227,7 +227,7 @@ int main(int argc, char *argv[]) {
     cout << "Using " << thr << " threads" << endl;
 
     // Instance of the class that defines what the server can do.
-    MicrowaveEndpoint stats(addr);
+    SmartwatchEndpoint stats(addr);
 
     // Initialize and start the server
     stats.init(thr);

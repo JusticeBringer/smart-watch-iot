@@ -1,2 +1,2 @@
-microwave: microwave_example.cpp
+smartwatch: smartwatch.cpp
 	g++ $< -o $@ -lpistache -lcrypto -lssl -lpthread
