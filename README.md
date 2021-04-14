@@ -37,7 +37,7 @@ make
 #### Second option: manually
 
 ```
-g++ smartwatch.cpp -o microwave -lpistache -lcrypto -lssl -lpthread
+g++ smartwatch.cpp -o smartwatch -lpistache -lcrypto -lssl -lpthread
 ```
 
 This will compile the project using g++, into an executable called `smartwatch` using the libraries `pistache`, `crypto`, `ssl`, `pthread`. You only really want pistache, but the last three are dependencies of the former.
