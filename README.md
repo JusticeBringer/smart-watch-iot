@@ -71,13 +71,66 @@ Cores = 8
 Using 2 threads
 ```
 
-To test, open up another terminal, and type\
-`curl http://localhost:9080/ready`
+### Test functionalities
+
+Below are some samples of the applications after using `GET` and `POST`
+
+#### Routes
+
+
+```
+POST http://localhost:9080/settings/lowBattery/:value
+GET  http://localhost:9080/settings/lowBattery/
+```
+
+**Note: replace 9080 with the required port number (9080 is by default).**
+
+#### Test if server is running
+
+Open up another terminal, and type
+
+```
+curl http://localhost:9080/ready
+```
 
 Number 1 should display.
+
 (Note: it is not always showing up)
 
 Now you have the server running
+
+#### Functionality no. 4
+
+```
+4. Dacă nivelul bateriei este scăzut, atunci să se aprindă un led de notificare
+```
+
+Routes:
+
+```
+POST http://localhost:9080/settings/lowBattery/:value
+GET  http://localhost:9080/settings/lowBattery/
+```
+
+```
+curl -X POST http://localhost:9080/settings/lowBattery/true
+lowBattery was set to true
+```
+
+```
+curl -X GET http://localhost:9080/settings/lowBattery/     
+lowBattery is set to 1. Value 1 means setting is on.
+```
+
+```
+curl -X POST http://localhost:9080/settings/lowBattery/false
+lowBattery was set to false
+```
+
+```
+curl -X GET http://localhost:9080/settings/lowBattery/
+lowBattery is set to 0. Value 0 means setting is off.
+```
 
 ## License
 

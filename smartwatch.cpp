@@ -88,8 +88,9 @@ private:
         // Generally say that when http://localhost:9080/ready is called, the handleReady function should be called. 
         Routes::Get(router, "/ready", Routes::bind(&Generic::handleReady));
         Routes::Get(router, "/auth", Routes::bind(&SmartwatchEndpoint::doAuth, this));
-        Routes::Post(router, "/settings/:settingName/:value", Routes::bind(&SmartwatchEndpoint::setSetting, this));
-        Routes::Get(router, "/settings/:settingName/", Routes::bind(&SmartwatchEndpoint::getSetting, this));
+
+        Routes::Post(router, "/settings/lowBattery/:value", Routes::bind(&SmartwatchEndpoint::setLowBatteryRoute, this));
+        Routes::Get(router, "/settings/lowBattery/", Routes::bind(&SmartwatchEndpoint::getLowBatteryRoute, this));
     }
 
     
@@ -103,16 +104,13 @@ private:
         response.send(Http::Code::Ok);
     }
 
-    // Endpoint to configure one of the Smartwatch's settings.
-    void setSetting(const Rest::Request& request, Http::ResponseWriter response){
-        // You don't know what the parameter content that you receive is, but you should
-        // try to cast it to some data structure. Here, I cast the settingName to string.
-        auto settingName = request.param(":settingName").as<std::string>();
+    // Endpoint to configure the low battery setting
+    void setLowBatteryRoute(const Rest::Request& request, Http::ResponseWriter response){
+        string lowBattery = "lowBattery";
 
         // This is a guard that prevents editing the same value by two concurent threads. 
         Guard guard(SmartwatchLock);
 
-        
         string val = "";
         if (request.hasParam(":value")) {
             auto value = request.param(":value");
@@ -120,38 +118,42 @@ private:
         }
 
         // Setting the Smartwatch's setting to value
-        int setResponse = mwv.set(settingName, val);
+        int setResponse = mwv.setLowBatterySetting(val);
 
         // Sending some confirmation or error response.
         if (setResponse == 1) {
-            response.send(Http::Code::Ok, settingName + " was set to " + val);
+            response.send(Http::Code::Ok, lowBattery + " was set to " + val);
         }
         else {
-            response.send(Http::Code::Not_Found, settingName + " was not found and or '" + val + "' was not a valid value ");
+            response.send(Http::Code::Not_Found, lowBattery + " was not found and or '" + val + "' was not a valid value ");
         }
-
     }
 
-    // Setting to get the settings value of one of the configurations of the Smartwatch
-    void getSetting(const Rest::Request& request, Http::ResponseWriter response){
-        auto settingName = request.param(":settingName").as<std::string>();
+
+    // Setting to get the settings value of the low battery setting
+    void getLowBatteryRoute(const Rest::Request& request, Http::ResponseWriter response){
+        string lowBattery = "lowBattery";
 
         Guard guard(SmartwatchLock);
 
-        string valueSetting = mwv.get(settingName);
+        string valueSetting = mwv.getLowBatterySetting();
 
         if (valueSetting != "") {
-
-            // In this response I also add a couple of headers, describing the server that sent this response, and the way the content is formatted.
+            // In this response I also add a couple of headers,
+            // describing the server that sent this response, and the way the content is formatted.
             using namespace Http;
             response.headers()
                         .add<Header::Server>("pistache/0.1")
                         .add<Header::ContentType>(MIME(Text, Plain));
 
-            response.send(Http::Code::Ok, settingName + " is " + valueSetting);
+            if (std::stoi(valueSetting) == 0) {
+                response.send(Http::Code::Ok, lowBattery + " is set to " + valueSetting + ". Value 0 means setting is off.");
+            } else {
+                response.send(Http::Code::Ok, lowBattery + " is set to " + valueSetting + ". Value 1 means setting is on.");
+            }
         }
         else {
-            response.send(Http::Code::Not_Found, settingName + " was not found");
+            response.send(Http::Code::Not_Found, lowBattery + " was not found");
         }
     }
 
@@ -160,38 +162,31 @@ private:
     public:
         explicit Smartwatch(){ }
 
-        // Setting the value for one of the settings. Hardcoded for the defrosting option
-        int set(std::string name, std::string value){
-            if(name == "defrost"){
-                defrost.name = name;
-                if(value == "true"){
-                    defrost.value = true;
-                    return 1;
-                }
-                if(value == "false"){
-                    defrost.value = false;
-                    return 1;
-                }
+        // Setter for the low battery setting
+        int setLowBatterySetting(std::string value){
+            lowBattery.name = "lowBattery";
+            if(value == "true"){
+                lowBattery.value = true;
+                return 1;
+            }
+            if(value == "false"){
+                lowBattery.value = false;
+                return 1;
             }
             return 0;
         }
 
-        // Getter
-        string get(std::string name){
-            if (name == "defrost"){
-                return std::to_string(defrost.value);
-            }
-            else{
-                return "";
-            }
+        // Getter for the low battery setting
+        string getLowBatterySetting(){
+            return std::to_string(lowBattery.value);
         }
-
+    
     private:
         // Defining and instantiating settings.
         struct boolSetting{
             std::string name;
             bool value;
-        }defrost;
+        }lowBattery;
     };
 
     // Create the lock which prevents concurrent editing of the same variable
