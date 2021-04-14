@@ -126,9 +126,11 @@ private:
 
         // Sending some confirmation or error response.
         if (setResponse == 1) {
-            response.send(Http::Code::Ok, settingName + " was set to " + std::to_string(val));
+            // current battery level is less than 20%
+            response.send(Http::Code::Ok, settingName + " was set to true");
         } else if (setResponse == 2) {
-            response.send(Http::Code::Bad_Request, settingName + " was set to false because current battery level is higher than 20%");
+            // current battery level is higher than 20%
+            response.send(Http::Code::Ok, settingName + " was set to false");
         } else {
             response.send(Http::Code::Not_Found, settingName + " was not found and or " + std::to_string(val) + " was not a valid value ");
         }
@@ -152,9 +154,9 @@ private:
                         .add<Header::ContentType>(MIME(Text, Plain));
 
             if (std::stoi(valueSetting) == 0) {
-                response.send(Http::Code::Ok, settingName + " is set to " + valueSetting + ". Value 0 means setting is off.");
+                response.send(Http::Code::Ok, settingName + " setting is set to false.");
             } else {
-                response.send(Http::Code::Ok, settingName + " is set to " + valueSetting + ". Value 1 means setting is on.");
+                response.send(Http::Code::Ok, settingName + " setting is set to true.");
             }
         }
         else {
@@ -221,7 +223,7 @@ private:
         int setLowBatterySetting(unsigned value){
             // if battery is less than 20%
             bool isLessThan20 = value < lowBattery.batteryMilliAmpH * 0.2;
-            
+
             if(isLessThan20){
                 lowBattery.value = true;
                 return 1;

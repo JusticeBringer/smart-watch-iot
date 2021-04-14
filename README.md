@@ -101,9 +101,42 @@ Now you have the server running
 
 #### Functionality no. 1
 
+```
+1. Dacă este o oră fixă, atunci declanșează o vibrație
+```
+
+Routes:
+
+```
+POST 
+GET  
+```
+
 #### Functionality no. 2
 
+```
+2. Luminozitatea ecranului să fie în funcție de luminozitatea mediului
+```
+
+Routes:
+
+```
+POST 
+GET  
+```
+
 #### Functionality no. 3
+
+```
+3. Detectarea mișcării: dacă nu se mai fac pași pentru o perioadă lungă de timp, atunci să apară de format apel către 112
+```
+
+Routes:
+
+```
+POST 
+GET  
+```
 
 #### Functionality no. 4
 
@@ -119,23 +152,23 @@ GET  http://localhost:9080/settings/lowBattery/
 ```
 
 ```
-curl -X POST http://localhost:9080/settings/lowBattery/true
+curl -X POST http://localhost:9080/settings/lowBattery/200
 lowBattery was set to true
 ```
 
 ```
-curl -X GET http://localhost:9080/settings/lowBattery/     
-lowBattery is set to 1. Value 1 means setting is on.
+curl -X GET http://localhost:9080/settings/lowBattery/    
+lowBattery setting is set to true.
 ```
 
 ```
-curl -X POST http://localhost:9080/settings/lowBattery/false
+curl -X POST http://localhost:9080/settings/lowBattery/2000
 lowBattery was set to false
 ```
 
 ```
-curl -X GET http://localhost:9080/settings/lowBattery/
-lowBattery is set to 0. Value 0 means setting is off.
+curl -X GET http://localhost:9080/settings/lowBattery/     
+lowBattery setting is set to false.
 ```
 
 #### Functionality no. 5
