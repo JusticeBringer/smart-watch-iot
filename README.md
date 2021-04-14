@@ -1,4 +1,4 @@
-# Example IoT Device
+# Smartwatch IOT
 
 ## Getting Started
 
