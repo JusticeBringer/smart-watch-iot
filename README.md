@@ -108,8 +108,28 @@ Now you have the server running
 Routes:
 
 ```
-POST 
-GET  
+POST http://localhost:9080/settings/alarmClock/:value
+GET  http://localhost:9080/settings/alarmClock/
+```
+
+```
+curl -X POST http://localhost:9080/settings/alarmClock/true
+alarmCLock was set to true
+```
+
+```
+curl -X GET http://localhost:9080/settings/alarmClock/
+alarmCLock is set to 1. Value 1 means setting is on.
+```
+
+```
+curl -X POST http://localhost:9080/settings/alarmClock/false
+alarmCLock was set to false
+```
+
+```
+curl -X GET http://localhost:9080/settings/alarmClock/
+alarmCLock is set to 0. Value 0 means setting is off.
 ```
 
 #### Functionality no. 2
