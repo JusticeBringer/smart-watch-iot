@@ -1,17 +1,17 @@
 # Proiect IP: Smartwatch IOT (aprilie - mai 2021)
 
 Componența echipei:
- - Arghire Gabriel, 342
- - Chitu Stefan Catalin, 342
- - Olaru Adrian, 342
- - Simionov Marius Daniel, 342
-     
+- Arghire Gabriel, 342
+- Chitu Stefan Catalin, 342
+- Olaru Adrian, 342
+- Simionov Marius Daniel, 342
+
 Funcționalități smartwatch:
- 1. Dacă este o oră fixă, atunci declanșează o vibrație
- 2. Luminozitatea ecranului să fie în funcție de luminozitatea mediului
- 3. Detectarea mișcării: dacă nu se mai fac pași pentru o perioadă lungă de timp, atunci să apară de format apel către 112
- 4. Dacă nivelul bateriei este scăzut, atunci să se aprindă un led de notificare
- 5. Dacă se apasă un buton lateral de pe ceas, atunci ecranul ceasului să devină alb (simulează o lanternă)
+1. Dacă este o oră fixă, atunci declanșează o vibrație
+2. Luminozitatea ecranului să fie în funcție de luminozitatea mediului
+3. Detectarea mișcării: dacă nu se mai fac pași pentru o perioadă lungă de timp, atunci să apară de format apel către 112
+4. Dacă nivelul bateriei este scăzut, atunci să se aprindă un led de notificare
+5. Dacă se apasă un buton lateral de pe ceas, atunci ecranul ceasului să devină alb (simulează o lanternă)
 
 ## Getting Started
 
@@ -132,16 +132,6 @@ curl -X GET http://localhost:9080/settings/alarmClock/
 alarmCLock is set to 0. Value 0 means setting is off.
 ```
 
-```
-curl -X GET http://localhost:9080/settings/checkClock/
-Negative response it is not 11 sharp.
-```
-
-```
-curl -X GET http://localhost:9080/settings/checkClock/
-Positive response, it is 11 sharp.
-```
-
 #### Functionality no. 2
 
 ```
@@ -151,10 +141,18 @@ Positive response, it is 11 sharp.
 Routes:
 
 ```
-POST 
-GET  
+POST http://localhost:9080/settings/brightness/:value
+GET  http://localhost:9080/settings/brightness/
+```
+```
+curl -X POST http://localhost:9080/settings/brightness/10
+The brightness is lower than 30. The value is 10
 ```
 
+```
+curl -X GET http://localhost:9080/settings/brightness/
+Brightness  is set to 10
+```
 #### Functionality no. 3
 
 ```

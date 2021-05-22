@@ -36,11 +36,11 @@ using namespace Pistache;
 // General advice: pay atetntion to the namespaces that you use in various contexts. Could prevent headaches.
 
 // This is just a helper function to preety-print the Cookies that one of the enpoints shall receive.
-void printCookies(const Http::Request& req) {
+void printCookies(const Http::Request &req) {
     auto cookies = req.cookies();
     std::cout << "Cookies: [" << std::endl;
     const std::string indent(4, ' ');
-    for (const auto& c: cookies) {
+    for (const auto &c: cookies) {
         std::cout << indent << c.name << " = " << c.value << std::endl;
     }
     std::cout << "]" << std::endl;
@@ -49,36 +49,35 @@ void printCookies(const Http::Request& req) {
 // Some generic namespace, with a simple function we could use to test the creation of the endpoints.
 namespace Generic {
 
-    void handleReady(const Rest::Request&, Http::ResponseWriter response) {
+    void handleReady(const Rest::Request &, Http::ResponseWriter response) {
         response.send(Http::Code::Ok, "1");
     }
 
 }
 
-// Definition of the SmartwatchEnpoint class 
+// Definition of the SmartwatchEnpoint class
 class SmartwatchEndpoint {
 public:
     explicit SmartwatchEndpoint(Address addr)
-        : httpEndpoint(std::make_shared<Http::Endpoint>(addr))
-    { }
+            : httpEndpoint(std::make_shared<Http::Endpoint>(addr)) {}
 
     // Initialization of the server. Additional options can be provided here
     void init(size_t thr = 2) {
         auto opts = Http::Endpoint::options()
-            .threads(static_cast<int>(thr));
+                .threads(static_cast<int>(thr));
         httpEndpoint->init(opts);
         // Server routes are loaded up
         setupRoutes();
     }
 
-    // Server is started threaded.  
+    // Server is started threaded.
     void start() {
         httpEndpoint->setHandler(router.handler());
         httpEndpoint->serveThreaded();
     }
 
     // When signaled server shuts down
-    void stop(){
+    void stop() {
         httpEndpoint->shutdown();
     }
 
@@ -91,37 +90,44 @@ private:
         Routes::Get(router, "/ready", Routes::bind(&Generic::handleReady));
         Routes::Get(router, "/auth", Routes::bind(&SmartwatchEndpoint::doAuth, this));
 
-        Routes::Post(router, "/settings/alarmClock/:value", Routes::bind(&SmartwatchEndpoint::setAlarmClockRoute, this));
+        Routes::Post(router, "/settings/alarmClock/:value",
+                     Routes::bind(&SmartwatchEndpoint::setAlarmClockRoute, this));
         Routes::Get(router, "/settings/alarmClock/", Routes::bind(&SmartwatchEndpoint::getAlarmClockRoute, this));
         Routes::Get(router, "/settings/checkClock/", Routes::bind(&SmartwatchEndpoint::getCheckClockRoute, this));
 
-        Routes::Post(router, "/settings/lowBattery/:value", Routes::bind(&SmartwatchEndpoint::setLowBatteryRoute, this));
+        Routes::Post(router, "/settings/lowBattery/:value",
+                     Routes::bind(&SmartwatchEndpoint::setLowBatteryRoute, this));
         Routes::Get(router, "/settings/lowBattery/", Routes::bind(&SmartwatchEndpoint::getLowBatteryRoute, this));
 
         Routes::Post(router, "/settings/lantern/:value", Routes::bind(&SmartwatchEndpoint::setLanternRoute, this));
         Routes::Get(router, "/settings/lantern/", Routes::bind(&SmartwatchEndpoint::getLanternRoute, this));
+
+        Routes::Post(router, "/settings/brightness/:value",
+                     Routes::bind(&SmartwatchEndpoint::setBrightnessBasedOnAmbientLight, this));
+        Routes::Get(router, "/settings/brightness/",
+                    Routes::bind(&SmartwatchEndpoint::getBrightnessBasedOnAmbientLight, this));
     }
 
-    
-    void doAuth(const Rest::Request& request, Http::ResponseWriter response) {
+
+    void doAuth(const Rest::Request &request, Http::ResponseWriter response) {
         // Function that prints cookies
         printCookies(request);
         // In the response object, it adds a cookie regarding the communications language.
         response.cookies()
-            .add(Http::Cookie("lang", "en-US"));
+                .add(Http::Cookie("lang", "en-US"));
         // Send the response
         response.send(Http::Code::Ok);
     }
 
     // Endpoint to configure the clock setting
-    void setAlarmClockRoute(const Rest::Request& request, Http::ResponseWriter response){
+    void setAlarmClockRoute(const Rest::Request &request, Http::ResponseWriter response) {
         string settingName = "alarmCLock";
 
         // This is a guard that prevents editing the same value by two concurent threads.
         Guard guard(SmartwatchLock);
 
         string val = "";
-        if(request.hasParam(":value")){
+        if (request.hasParam(":value")) {
             auto value = request.param(":value");
             val = value.as<string>();
         }
@@ -132,14 +138,14 @@ private:
         // Sending some confirmation or error response.
         if (setResponse == 1) {
             response.send(Http::Code::Ok, settingName + " was set to " + val);
-        }
-        else {
-            response.send(Http::Code::Not_Found, settingName + " was not found and or '" + val + "' was not a valid value ");
+        } else {
+            response.send(Http::Code::Not_Found,
+                          settingName + " was not found and or '" + val + "' was not a valid value ");
         }
     }
 
     // Setting to get the settings value of the alarm clock setting
-    void getAlarmClockRoute(const Rest::Request& request, Http::ResponseWriter response){
+    void getAlarmClockRoute(const Rest::Request &request, Http::ResponseWriter response) {
         string settingName = "alarmCLock";
 
         Guard guard(SmartwatchLock);
@@ -153,18 +159,19 @@ private:
                     .add<Header::ContentType>(MIME(Text, Plain));
 
             if (std::stoi(valueSetting) == 0) {
-                response.send(Http::Code::Ok, settingName + " is set to " + valueSetting + ". Value 0 means setting is off.");
+                response.send(Http::Code::Ok,
+                              settingName + " is set to " + valueSetting + ". Value 0 means setting is off.");
             } else {
-                response.send(Http::Code::Ok, settingName + " is set to " + valueSetting + ". Value 1 means setting is on.");
+                response.send(Http::Code::Ok,
+                              settingName + " is set to " + valueSetting + ". Value 1 means setting is on.");
             }
-        }
-        else {
+        } else {
             response.send(Http::Code::Not_Found, settingName + " was not found");
         }
     }
 
     // Setting to get notification when it is o'clock
-    void getCheckClockRoute(const Rest::Request& request, Http::ResponseWriter response){
+    void getCheckClockRoute(const Rest::Request &request, Http::ResponseWriter response) {
         string settingName = "alarmCLock";
 
         Guard guard(SmartwatchLock);
@@ -178,30 +185,30 @@ private:
                     .add<Header::ContentType>(MIME(Text, Plain));
 
             if (std::stoi(valueSetting) == 0) {
-                response.send(Http::Code::Ok, settingName + " is set to " + valueSetting + ". Value 0 means setting is off.");
+                response.send(Http::Code::Ok,
+                              settingName + " is set to " + valueSetting + ". Value 0 means setting is off.");
             } else {
                 time_t now = time(0);
                 tm *ltm = localtime(&now);
                 int minutes = ltm->tm_min;
                 int hour = ltm->tm_hour;
 
-                if(minutes == 0){
+                if (minutes == 0) {
                     response.send(Http::Code::Ok, "Positive response, it is " + std::to_string(hour) + " sharp.");
-                } else{
+                } else {
                     response.send(Http::Code::Ok, "Negative response, it is not " + std::to_string(hour) + " sharp.");
                 }
             }
-        }
-        else {
+        } else {
             response.send(Http::Code::Not_Found, settingName + " was not found");
         }
     }
 
     // Endpoint to configure the low battery setting
-    void setLowBatteryRoute(const Rest::Request& request, Http::ResponseWriter response){
+    void setLowBatteryRoute(const Rest::Request &request, Http::ResponseWriter response) {
         string settingName = "lowBattery";
 
-        // This is a guard that prevents editing the same value by two concurent threads. 
+        // This is a guard that prevents editing the same value by two concurent threads.
         Guard guard(SmartwatchLock);
 
         unsigned val = 0;
@@ -221,13 +228,14 @@ private:
             // current battery level is higher than 20%
             response.send(Http::Code::Ok, settingName + " was set to false");
         } else {
-            response.send(Http::Code::Not_Found, settingName + " was not found and or " + std::to_string(val) + " was not a valid value ");
+            response.send(Http::Code::Not_Found,
+                          settingName + " was not found and or " + std::to_string(val) + " was not a valid value ");
         }
     }
 
 
     // Setting to get the settings value of the low battery setting
-    void getLowBatteryRoute(const Rest::Request& request, Http::ResponseWriter response){
+    void getLowBatteryRoute(const Rest::Request &request, Http::ResponseWriter response) {
         string settingName = "lowBattery";
 
         Guard guard(SmartwatchLock);
@@ -239,25 +247,65 @@ private:
             // describing the server that sent this response, and the way the content is formatted.
             using namespace Http;
             response.headers()
-                        .add<Header::Server>("pistache/0.1")
-                        .add<Header::ContentType>(MIME(Text, Plain));
+                    .add<Header::Server>("pistache/0.1")
+                    .add<Header::ContentType>(MIME(Text, Plain));
 
             if (std::stoi(valueSetting) == 0) {
                 response.send(Http::Code::Ok, settingName + " setting is set to false.");
             } else {
                 response.send(Http::Code::Ok, settingName + " setting is set to true.");
             }
-        }
-        else {
+        } else {
             response.send(Http::Code::Not_Found, settingName + " was not found");
         }
     }
 
-    // Endpoint to configure the lantern setting
-    void setLanternRoute(const Rest::Request& request, Http::ResponseWriter response) {
+
+    // Setting to get the settings value of the lantern setting
+    void getLanternRoute(const Rest::Request &request, Http::ResponseWriter response) {
         string settingName = "lantern";
 
-        // This is a guard that prevents editing the same value by two concurent threads. 
+        Guard guard(SmartwatchLock);
+
+        string valueSetting = swt.getLanternSetting();
+
+        if (valueSetting != "") {
+            using namespace Http;
+            response.headers()
+                    .add<Header::Server>("pistache/0.1")
+                    .add<Header::ContentType>(MIME(Text, Plain));
+
+            if (std::stoi(valueSetting) == 0) {
+                response.send(Http::Code::Ok,
+                              settingName + " is set to " + valueSetting + ". Value 0 means setting is off.");
+            } else {
+                response.send(Http::Code::Ok,
+                              settingName + " is set to " + valueSetting + ". Value 1 means setting is on.");
+            }
+        } else {
+            response.send(Http::Code::Not_Found, settingName + " was not found");
+        }
+    }
+
+    void getBrightnessBasedOnAmbientLight(const Rest::Request &request, Http::ResponseWriter response) {
+        Guard guard(SmartwatchLock);
+
+        int value = swt.getBrightnessSetting();
+
+        using namespace Http;
+        response.headers()
+                .add<Header::Server>("pistache/0.1")
+                .add<Header::ContentType>(MIME(Text, Plain));
+
+        response.send(Http::Code::Ok,
+                      "Brightness  is set to " + std::to_string(value));
+    }
+
+    // Endpoint to configure the lantern setting
+    void setLanternRoute(const Rest::Request &request, Http::ResponseWriter response) {
+        string settingName = "lantern";
+
+        // This is a guard that prevents editing the same value by two concurent threads.
         Guard guard(SmartwatchLock);
 
         string val = "";
@@ -272,70 +320,82 @@ private:
         // Sending some confirmation or error response.
         if (setResponse == 1) {
             response.send(Http::Code::Ok, settingName + " was set to " + val);
-        }
-        else {
-            response.send(Http::Code::Not_Found, settingName + " was not found and or '" + val + "' was not a valid value ");
+        } else {
+            response.send(Http::Code::Not_Found,
+                          settingName + " was not found and or '" + val + "' was not a valid value ");
         }
     }
 
-    // Setting to get the settings value of the lantern setting
-    void getLanternRoute(const Rest::Request& request, Http::ResponseWriter response) {
-        string settingName = "lantern";
-
+    void setBrightnessBasedOnAmbientLight(const Rest::Request &request, Http::ResponseWriter response) {
         Guard guard(SmartwatchLock);
-
-        string valueSetting = swt.getLanternSetting();
-
-        if (valueSetting != "") {
-            using namespace Http;
-            response.headers()
-                        .add<Header::Server>("pistache/0.1")
-                        .add<Header::ContentType>(MIME(Text, Plain));
-
-            if (std::stoi(valueSetting) == 0) {
-                response.send(Http::Code::Ok, settingName + " is set to " + valueSetting + ". Value 0 means setting is off.");
-            } else {
-                response.send(Http::Code::Ok, settingName + " is set to " + valueSetting + ". Value 1 means setting is on.");
-            }
+        int val;
+        if (request.hasParam(":value")) {
+            auto value = request.param(":value");
+            val = value.as<int>();
         }
-        else {
-            response.send(Http::Code::Not_Found, settingName + " was not found");
+        swt.setBrightnessSetting(val);
+        if (val <= 0) {
+            response.send(Http::Code::Bad_Request, "The brightness must be higher than 0");
+            return;
         }
+        if (val <= 30) {
+            response.send(Http::Code::Ok, "The brightness is lower than 30. The value is " + std::to_string(val));
+            return;
+        }
+        if (val <= 70) {
+            response.send(Http::Code::Ok, "The brightness is lower than 70. The value is " + std::to_string(val));
+            return;
+        }
+        if (val <= 100) {
+            response.send(Http::Code::Ok, "The brightness is lower than 100. The value is " + std::to_string(val));
+            return;
+        }
+        response.send(Http::Code::Bad_Request, "The brightness must be lower than 101");
+
     }
 
     // Defining the class of the Smartwatch. It should model the entire configuration of the Smartwatch
     class Smartwatch {
     public:
-        explicit Smartwatch(){ }
+        explicit Smartwatch() {}
 
         // Setter for the alarm clock setting
-        int setAlarmCLockSetting(std::string value){
-            if(value == "true"){
+        int setAlarmCLockSetting(std::string value) {
+            if (value == "true") {
                 this->alarmClock.value = true;
                 return 1;
             }
-            if(value == "false"){
+            if (value == "false") {
                 this->alarmClock.value = false;
                 return 1;
             }
             return 0;
         }
 
+        int setBrightnessSetting(int value) {
+            this->brightness.value = value;
+            return 1;
+        }
+
         // Getter for the low battery setting
-        string getAlarmClockSetting(){
+        string getAlarmClockSetting() {
             return std::to_string(this->alarmClock.value);
         }
 
+        int getBrightnessSetting() {
+            return this->brightness.value;
+        }
+
         // Setter for the low battery setting
-        int setLowBatterySetting(unsigned value){
+        int setLowBatterySetting(unsigned value) {
             // if battery is less than 20%
             bool isLessThan20 = value < lowBattery.batteryMilliAmpH * 0.2;
 
-            if(isLessThan20){
+            if (isLessThan20) {
                 lowBattery.value = true;
                 return 1;
             }
-            
+
             if (!isLessThan20) {
                 lowBattery.value = false;
                 return 2;
@@ -346,17 +406,17 @@ private:
         }
 
         // Getter for the low battery setting
-        string getLowBatterySetting(){
+        string getLowBatterySetting() {
             return std::to_string(lowBattery.value);
         }
 
         // Setter for the lantern setting
-        int setLanternSetting(std::string value){
-            if(value == "true"){
+        int setLanternSetting(std::string value) {
+            if (value == "true") {
                 lantern.value = true;
                 return 1;
             }
-            if(value == "false"){
+            if (value == "false") {
                 lantern.value = false;
                 return 1;
             }
@@ -364,16 +424,16 @@ private:
         }
 
         // Getter for the lantern setting
-        string getLanternSetting(){
+        string getLanternSetting() {
             return std::to_string(lantern.value);
         }
-    
+
     private:
         // Defining alarmCLock setting
-        struct alarmClockSetting{
+        struct alarmClockSetting {
             std::string name = "alarmClock";
             bool value = false;
-        }alarmClock;
+        } alarmClock;
 
         // Defining lantern setting
         struct lanternSetting {
@@ -388,6 +448,11 @@ private:
             bool value = false;
         } lowBattery;
 
+        struct brightnessSetting {
+            std::string name = "brightness";
+            int value = -1;
+        } brightness;
+
     };
 
     // Create the lock which prevents concurrent editing of the same variable
@@ -399,7 +464,7 @@ private:
     Smartwatch swt;
 
     // Defining the httpEndpoint and a router.
-    std::shared_ptr<Http::Endpoint> httpEndpoint;
+    std::shared_ptr <Http::Endpoint> httpEndpoint;
     Rest::Router router;
 };
 
@@ -408,10 +473,10 @@ int main(int argc, char *argv[]) {
     // This code is needed for gracefull shutdown of the server when no longer needed.
     sigset_t signals;
     if (sigemptyset(&signals) != 0
-            || sigaddset(&signals, SIGTERM) != 0
-            || sigaddset(&signals, SIGINT) != 0
-            || sigaddset(&signals, SIGHUP) != 0
-            || pthread_sigmask(SIG_BLOCK, &signals, nullptr) != 0) {
+        || sigaddset(&signals, SIGTERM) != 0
+        || sigaddset(&signals, SIGINT) != 0
+        || sigaddset(&signals, SIGHUP) != 0
+        || pthread_sigmask(SIG_BLOCK, &signals, nullptr) != 0) {
         perror("install signal handler failed");
         return 1;
     }
@@ -445,12 +510,9 @@ int main(int argc, char *argv[]) {
     // Code that waits for the shutdown sinal for the server
     int signal = 0;
     int status = sigwait(&signals, &signal);
-    if (status == 0)
-    {
+    if (status == 0) {
         std::cout << "received signal " << signal << std::endl;
-    }
-    else
-    {
+    } else {
         std::cerr << "sigwait returns " << status << std::endl;
     }
 
