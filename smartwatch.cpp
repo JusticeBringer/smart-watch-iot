@@ -17,6 +17,7 @@
 */
 
 #include <algorithm>
+#include <ctime>
 
 #include <pistache/net.h>
 #include <pistache/http.h>
@@ -90,6 +91,10 @@ private:
         Routes::Get(router, "/ready", Routes::bind(&Generic::handleReady));
         Routes::Get(router, "/auth", Routes::bind(&SmartwatchEndpoint::doAuth, this));
 
+        Routes::Post(router, "/settings/alarmClock/:value", Routes::bind(&SmartwatchEndpoint::setAlarmClockRoute, this));
+        Routes::Get(router, "/settings/alarmClock/", Routes::bind(&SmartwatchEndpoint::getAlarmClockRoute, this));
+        Routes::Get(router, "/settings/checkClock/", Routes::bind(&SmartwatchEndpoint::getCheckClockRoute, this));
+
         Routes::Post(router, "/settings/lowBattery/:value", Routes::bind(&SmartwatchEndpoint::setLowBatteryRoute, this));
         Routes::Get(router, "/settings/lowBattery/", Routes::bind(&SmartwatchEndpoint::getLowBatteryRoute, this));
 
@@ -106,6 +111,90 @@ private:
             .add(Http::Cookie("lang", "en-US"));
         // Send the response
         response.send(Http::Code::Ok);
+    }
+
+    // Endpoint to configure the clock setting
+    void setAlarmClockRoute(const Rest::Request& request, Http::ResponseWriter response){
+        string settingName = "alarmCLock";
+
+        // This is a guard that prevents editing the same value by two concurent threads.
+        Guard guard(SmartwatchLock);
+
+        string val = "";
+        if(request.hasParam(":value")){
+            auto value = request.param(":value");
+            val = value.as<string>();
+        }
+
+        // Setting the Smartwatch's setting to value
+        int setResponse = swt.setAlarmCLockSetting(val);
+
+        // Sending some confirmation or error response.
+        if (setResponse == 1) {
+            response.send(Http::Code::Ok, settingName + " was set to " + val);
+        }
+        else {
+            response.send(Http::Code::Not_Found, settingName + " was not found and or '" + val + "' was not a valid value ");
+        }
+    }
+
+    // Setting to get the settings value of the alarm clock setting
+    void getAlarmClockRoute(const Rest::Request& request, Http::ResponseWriter response){
+        string settingName = "alarmCLock";
+
+        Guard guard(SmartwatchLock);
+
+        string valueSetting = swt.getAlarmClockSetting();
+
+        if (valueSetting != "") {
+            using namespace Http;
+            response.headers()
+                    .add<Header::Server>("pistache/0.1")
+                    .add<Header::ContentType>(MIME(Text, Plain));
+
+            if (std::stoi(valueSetting) == 0) {
+                response.send(Http::Code::Ok, settingName + " is set to " + valueSetting + ". Value 0 means setting is off.");
+            } else {
+                response.send(Http::Code::Ok, settingName + " is set to " + valueSetting + ". Value 1 means setting is on.");
+            }
+        }
+        else {
+            response.send(Http::Code::Not_Found, settingName + " was not found");
+        }
+    }
+
+    // Setting to get notification when it is o'clock
+    void getCheckClockRoute(const Rest::Request& request, Http::ResponseWriter response){
+        string settingName = "alarmCLock";
+
+        Guard guard(SmartwatchLock);
+
+        string valueSetting = swt.getAlarmClockSetting();
+
+        if (valueSetting != "") {
+            using namespace Http;
+            response.headers()
+                    .add<Header::Server>("pistache/0.1")
+                    .add<Header::ContentType>(MIME(Text, Plain));
+
+            if (std::stoi(valueSetting) == 0) {
+                response.send(Http::Code::Ok, settingName + " is set to " + valueSetting + ". Value 0 means setting is off.");
+            } else {
+                time_t now = time(0);
+                tm *ltm = localtime(&now);
+                int minutes = ltm->tm_min;
+                int hour = ltm->tm_hour;
+
+                if(minutes == 0){
+                    response.send(Http::Code::Ok, "Positive response, it is " + std::to_string(hour) + " sharp.");
+                } else{
+                    response.send(Http::Code::Ok, "Negative response, it is not " + std::to_string(hour) + " sharp.");
+                }
+            }
+        }
+        else {
+            response.send(Http::Code::Not_Found, settingName + " was not found");
+        }
     }
 
     // Endpoint to configure the low battery setting
@@ -219,6 +308,24 @@ private:
     public:
         explicit Smartwatch(){ }
 
+        // Setter for the alarm clock setting
+        int setAlarmCLockSetting(std::string value){
+            if(value == "true"){
+                this->alarmClock.value = true;
+                return 1;
+            }
+            if(value == "false"){
+                this->alarmClock.value = false;
+                return 1;
+            }
+            return 0;
+        }
+
+        // Getter for the low battery setting
+        string getAlarmClockSetting(){
+            return std::to_string(this->alarmClock.value);
+        }
+
         // Setter for the low battery setting
         int setLowBatterySetting(unsigned value){
             // if battery is less than 20%
@@ -262,6 +369,12 @@ private:
         }
     
     private:
+        // Defining alarmCLock setting
+        struct alarmClockSetting{
+            std::string name = "alarmClock";
+            bool value = false;
+        }alarmClock;
+
         // Defining lantern setting
         struct lanternSetting {
             std::string name = "lantern";
