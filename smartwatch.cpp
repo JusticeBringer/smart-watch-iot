@@ -17,6 +17,7 @@
 */
 
 #include <algorithm>
+#include <ctime>
 
 #include <pistache/net.h>
 #include <pistache/http.h>
@@ -92,6 +93,7 @@ private:
 
         Routes::Post(router, "/settings/alarmClock/:value", Routes::bind(&SmartwatchEndpoint::setAlarmClockRoute, this));
         Routes::Get(router, "/settings/alarmClock/", Routes::bind(&SmartwatchEndpoint::getAlarmClockRoute, this));
+        Routes::Get(router, "/settings/checkClock/", Routes::bind(&SmartwatchEndpoint::getCheckClockRoute, this));
 
         Routes::Post(router, "/settings/lowBattery/:value", Routes::bind(&SmartwatchEndpoint::setLowBatteryRoute, this));
         Routes::Get(router, "/settings/lowBattery/", Routes::bind(&SmartwatchEndpoint::getLowBatteryRoute, this));
@@ -154,6 +156,40 @@ private:
                 response.send(Http::Code::Ok, settingName + " is set to " + valueSetting + ". Value 0 means setting is off.");
             } else {
                 response.send(Http::Code::Ok, settingName + " is set to " + valueSetting + ". Value 1 means setting is on.");
+            }
+        }
+        else {
+            response.send(Http::Code::Not_Found, settingName + " was not found");
+        }
+    }
+
+    // Setting to get notification when it is o'clock
+    void getCheckClockRoute(const Rest::Request& request, Http::ResponseWriter response){
+        string settingName = "alarmCLock";
+
+        Guard guard(SmartwatchLock);
+
+        string valueSetting = swt.getAlarmClockSetting();
+
+        if (valueSetting != "") {
+            using namespace Http;
+            response.headers()
+                    .add<Header::Server>("pistache/0.1")
+                    .add<Header::ContentType>(MIME(Text, Plain));
+
+            if (std::stoi(valueSetting) == 0) {
+                response.send(Http::Code::Ok, settingName + " is set to " + valueSetting + ". Value 0 means setting is off.");
+            } else {
+                time_t now = time(0);
+                tm *ltm = localtime(&now);
+                int minutes = ltm->tm_min;
+                int hour = ltm->tm_hour;
+
+                if(minutes == 0){
+                    response.send(Http::Code::Ok, "Positive response, it is " + std::to_string(hour) + " sharp.");
+                } else{
+                    response.send(Http::Code::Ok, "Negative response, it is not " + std::to_string(hour) + " sharp.");
+                }
             }
         }
         else {

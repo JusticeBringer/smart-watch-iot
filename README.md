@@ -132,6 +132,16 @@ curl -X GET http://localhost:9080/settings/alarmClock/
 alarmCLock is set to 0. Value 0 means setting is off.
 ```
 
+```
+curl -X GET http://localhost:9080/settings/checkClock/
+Negative response it is not 11 sharp.
+```
+
+```
+curl -X GET http://localhost:9080/settings/checkClock/
+Positive response, it is 11 sharp.
+```
+
 #### Functionality no. 2
 
 ```
