@@ -9,9 +9,10 @@ Componența echipei:
 Funcționalități smartwatch:
 1. Dacă este o oră fixă, atunci declanșează o vibrație
 2. Luminozitatea ecranului să fie în funcție de luminozitatea mediului
-3. Detectarea mișcării: dacă nu se mai fac pași pentru o perioadă lungă de timp, atunci să apară de format apel către 112
-4. Dacă nivelul bateriei este scăzut, atunci să se aprindă un led de notificare
-5. Dacă se apasă un buton lateral de pe ceas, atunci ecranul ceasului să devină alb (simulează o lanternă)
+3. Modul de alergare: Îți spune câți metrii ai alergat
+4. Modul de panică: dacă nu se mai fac pași pentru o perioadă lungă de timp, atunci esti întrebat dacă vrei să formezi un apel către 112
+5. Dacă nivelul bateriei este scăzut, atunci să se aprindă un led de notificare
+6. Dacă se apasă un buton lateral de pe ceas, atunci ecranul ceasului să devină alb (simulează o lanternă)
 
 ## Getting Started
 
@@ -156,20 +157,85 @@ Brightness  is set to 10
 #### Functionality no. 3
 
 ```
-3. Detectarea mișcării: dacă nu se mai fac pași pentru o perioadă lungă de timp, atunci să apară de format apel către 112
+3. Modul de alergare: Îți spune câți metrii ai alergat
 ```
 
 Routes:
 
 ```
-POST 
-GET  
+POST http://localhost:9080/settings/running/:value
+GET  http://localhost:9080/settings/running/
+```
+
+```
+curl -X POST http://localhost:9080/settings/running/10
+You run 1600 meters in 10 minutes.
+```
+
+```
+curl -X GET http://localhost:9080/settings/running
+Running time is set to 10 minutes.
+```
+
+```
+curl -X POST http://localhost:9080/settings/running/100
+You run 11000 meters. You should rest.
+```
+
+```
+curl -X GET http://localhost:9080/settings/running    
+Running time is set to 100 minutes.
 ```
 
 #### Functionality no. 4
 
 ```
-4. Dacă nivelul bateriei este scăzut, atunci să se aprindă un led de notificare
+4.Modul de panică: dacă nu se mai fac pași pentru o perioadă lungă de timp (cel putin 10 minute), atunci esti întrebat dacă vrei să formezi un apel către 112
+```
+
+Routes:
+
+```
+POST http://localhost:9080/settings/panicMode/:value
+GET  http://localhost:9080/settings/panicMode/
+```
+
+```
+curl -X POST http://localhost:9080/settings/panicMode/5
+panicMode was set to false.
+```
+
+```
+curl -X GET http://localhost:9080/settings/panicMode
+panicMode is set to 0. Value 0 means panicMode is off.
+```
+
+```
+curl -X POST http://localhost:9080/settings/panicMode/15
+panicMode was set to true. Call 112 in progress...
+```
+
+```
+curl -X GET http://localhost:9080/settings/panicMode
+panicMode is set to 1. Value 1 means panicMode is on and there is an emergency call in progress.
+```
+
+Considerăm că perioada de timp în care utilizatorul nu mai face pași (între 180 de minute și 480 de minute) este asociată somnului.
+
+```
+curl -X POST http://localhost:9080/settings/panicMode/180
+panicMode was set to false.
+```
+
+```
+curl -X GET http://localhost:9080/settings/panicMode
+panicMode is set to 0. Value 0 means panicMode is off.
+```
+
+#### Functionality no. 5
+
+```
+5. Dacă nivelul bateriei este scăzut, atunci să se aprindă un led de notificare
 ```
 
 Routes:
@@ -199,10 +265,10 @@ curl -X GET http://localhost:9080/settings/lowBattery/
 lowBattery setting is set to false.
 ```
 
-#### Functionality no. 5
+#### Functionality no. 6
 
 ```
-5. Dacă se apasă un buton lateral de pe ceas, atunci ecranul ceasului să devină alb (simulează o lanternă)
+6. Dacă se apasă un buton lateral de pe ceas, atunci ecranul ceasului să devină alb (simulează o lanternă)
 ```
 
 Routes:
