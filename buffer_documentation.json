@@ -84,7 +84,7 @@
                     "token-type":"string",
                     "byte-size":10,
                     "regex-rule": "[a-zA-Z]*", // Correct input will be: [panicMode]
-                    "optional": false
+                    "optional": true
                 },
                 {
                     "name":"Panic Mode option parameter value",
@@ -92,7 +92,7 @@
                     "token-type":"string",
                     "byte-size":128,
                     "regex-rule": "[0-9]*", // Correct inputs will be: [0, 1, 180, 480, 500, etc.]
-                    "optional": false
+                    "optional": true
                 },
                 {
                     "name":"Trigger Panic Mode option",
@@ -100,7 +100,7 @@
                     "token-type":"string",
                     "byte-size":10,
                     "regex-rule": "[a-zA-Z]*", // Correct input will be: [triggerPanicMode]
-                    "optional": false
+                    "optional": true
                 },
                 {
                     "name":"Trigger Panic Mode option parameter value",
@@ -236,19 +236,11 @@
                     "optional": false
                 },
                 {
-                    "name":"Panic Mode option",
-                    "description": "Panic Mode option parameter",
+                    "name":"Panic Mode and Trigger Panic Mode options",
+                    "description": "Parameters of panic mode option",
                     "token-type":"string",
                     "byte-size":10,
-                    "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [panicMode]
-                    "optional": false
-                },
-                {
-                    "name":"Trigger Panic Mode option",
-                    "description": "Trigger Panic Mode option parameter",
-                    "token-type":"string",
-                    "byte-size":10,
-                    "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [triggerPanicMode]
+                    "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [panicMode, triggerPanicMode]
                     "optional": false
                 }
             ]
