@@ -10,7 +10,7 @@
     Functionalitati smartwatch:
      1. Dacă este o oră fixă, atunci declanșează o vibrație
      2. Luminozitatea ecranului să fie în funcție de luminozitatea mediului
-     3. Modul de alergare: Îți spune câți metrii ai alergat
+     3. Modul de alergare: Îți spune câți metri ai alergat
 	 4. Modul de panică: dacă nu se mai fac pași pentru o perioadă lungă de timp, atunci esti întrebat dacă vrei să formezi un apel către 112
      5. Dacă nivelul bateriei este scăzut, atunci să se aprindă un led de notificare
      6. Dacă se apasă un buton lateral de pe ceas, atunci ecranul ceasului să devină alb (simulează o lanternă)
@@ -330,7 +330,7 @@ private:
             response.send(Http::Code::Ok, "Button „Call for 112” is being shown on screen.");
         }
         else{
-            response.send(Http::Code::Bad_Request, "Please provide a value higher than 10.");
+            response.send(Http::Code::Bad_Request, "Please provide a proper value.");
         }
     }
 
@@ -575,15 +575,20 @@ private:
             }
             
             // If user might be sleeping
-            if (value >= 180 && value < 480){
+            if (value >= 180 && value <= 480){
                 panicMode.value = false;
                 return 2;
             }
 
             // If user did not move for certain amount of time, he could be in danger
-            if ((value >= 60 && value <= 180) || value > 480) {
+            if ((value >= 10 && value < 180) || value > 480) {
                 panicMode.value = true;
                 return 3;
+            }
+
+            if(value > 1 && value <10){
+                panicMode.value = false;
+                return 0;
             }
         
             // otherwise we received a bad value

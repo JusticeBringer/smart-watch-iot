@@ -11,8 +11,8 @@
             {
                 "name":"Smartwatch options",
                 "description":"The settings of the smartwatch",
-                "token-type":"string", 
-                "byte-size":10, 
+                "token-type":"string",
+                "byte-size":10,
                 "regex-rule": "[a-zA-Z]*", // Correct input will be: [settings]
                 "optional": false
             },
@@ -34,6 +34,84 @@
             }
             ]
         },
+        "3":{
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "prefix": "curl -X POST 'http://localhost:9080/'",
+            "buffer-tokens":[
+                {
+                    "name":"Smartwatch options",
+                    "description":"The settings of the smartwatch",
+                    "token-type":"string",
+                    "byte-size":10,
+                    "regex-rule": "[a-zA-Z]*", // Correct input will be: [settings]
+                    "optional": false
+                },
+                {
+                    "name":"Running Mode option",
+                    "description": "Running Mode option parameter key",
+                    "token-type":"string",
+                    "byte-size":10,
+                    "regex-rule": "[a-zA-Z]*", // Correct input will be: [running]
+                    "optional": false
+                },
+                {
+                    "name":"Running option parameter value",
+                    "description": "Parameter value for the setting chosen",
+                    "token-type":"string",
+                    "byte-size":128,
+                    "regex-rule": "[0-9]*", // Correct inputs will be: [1, 5, 10, 60, 120, etc.]
+                    "optional": false
+                }
+            ]
+        },
+        "4":{
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "prefix": "curl -X POST 'http://localhost:9080/'",
+            "buffer-tokens":[
+                {
+                    "name":"Smartwatch options",
+                    "description":"The settings of the smartwatch",
+                    "token-type":"string",
+                    "byte-size":10,
+                    "regex-rule": "[a-zA-Z]*", // Correct input will be: [settings]
+                    "optional": false
+                },
+                {
+                    "name":"Panic Mode option",
+                    "description": "Panic Mode option parameter key",
+                    "token-type":"string",
+                    "byte-size":10,
+                    "regex-rule": "[a-zA-Z]*", // Correct input will be: [panicMode]
+                    "optional": false
+                },
+                {
+                    "name":"Panic Mode option parameter value",
+                    "description": "Parameter value for the setting chosen",
+                    "token-type":"string",
+                    "byte-size":128,
+                    "regex-rule": "[0-9]*", // Correct inputs will be: [0, 1, 180, 480, 500, etc.]
+                    "optional": false
+                },
+                {
+                    "name":"Trigger Panic Mode option",
+                    "description": "Trigger Panic Mode option parameter key",
+                    "token-type":"string",
+                    "byte-size":10,
+                    "regex-rule": "[a-zA-Z]*", // Correct input will be: [triggerPanicMode]
+                    "optional": false
+                },
+                {
+                    "name":"Trigger Panic Mode option parameter value",
+                    "description": "Parameter value for the setting chosen",
+                    "token-type":"string",
+                    "byte-size":10,
+                    "regex-rule": "[0-1]", // Correct inputs will be: [0, 1]
+                    "optional": false
+                }
+            ]
+        },
         "5":{
             "token-delimitators": "",
             "protocol": "HTTP",
@@ -42,8 +120,8 @@
             {
                 "name":"Smartwatch options",
                 "description":"The settings of the smartwatch",
-                "token-type":"string", 
-                "byte-size":10, 
+                "token-type":"string",
+                "byte-size":10,
                 "regex-rule": "[a-zA-Z]*", // Correct input will be: [settings]
                 "optional": false
             },
@@ -73,8 +151,8 @@
             {
                 "name":"Smartwatch options",
                 "description":"The settings of the smartwatch",
-                "token-type":"string", 
-                "byte-size":10, 
+                "token-type":"string",
+                "byte-size":10,
                 "regex-rule": "[a-zA-Z]*", // Correct input will be: [settings]
                 "optional": false
             },
@@ -106,8 +184,8 @@
             {
                 "name":"Smartwatch options",
                 "description":"The settings of the smartwatch",
-                "token-type":"string", 
-                "byte-size":10, 
+                "token-type":"string",
+                "byte-size":10,
                 "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [settings]
                 "optional": false
             },
@@ -121,6 +199,60 @@
             }
             ]
         },
+        "3":{
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "prefix": "curl -X GET 'http://localhost:9080/'",
+            "buffer-tokens":[
+                {
+                    "name":"Smartwatch options",
+                    "description":"The settings of the smartwatch",
+                    "token-type":"string",
+                    "byte-size":10,
+                    "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [settings]
+                    "optional": false
+                },
+                {
+                    "name":"Running mode option",
+                    "description": "Running mode option parameter",
+                    "token-type":"string",
+                    "byte-size":10,
+                    "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [running]
+                    "optional": false
+                }
+            ]
+        },
+        "4":{
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "prefix": "curl -X GET 'http://localhost:9080/'",
+            "buffer-tokens":[
+                {
+                    "name":"Smartwatch options",
+                    "description":"The settings of the smartwatch",
+                    "token-type":"string",
+                    "byte-size":10,
+                    "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [settings]
+                    "optional": false
+                },
+                {
+                    "name":"Panic Mode option",
+                    "description": "Panic Mode option parameter",
+                    "token-type":"string",
+                    "byte-size":10,
+                    "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [panicMode]
+                    "optional": false
+                },
+                {
+                    "name":"Trigger Panic Mode option",
+                    "description": "Trigger Panic Mode option parameter",
+                    "token-type":"string",
+                    "byte-size":10,
+                    "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [triggerPanicMode]
+                    "optional": false
+                }
+            ]
+        },
         "5":{
             "token-delimitators": "",
             "protocol": "HTTP",
@@ -129,8 +261,8 @@
             {
                 "name":"Smartwatch options",
                 "description":"The settings of the smartwatch",
-                "token-type":"string", 
-                "byte-size":10, 
+                "token-type":"string",
+                "byte-size":10,
                 "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [settings]
                 "optional": false
             },
@@ -152,8 +284,8 @@
             {
                 "name":"Smartwatch options",
                 "description":"The settings of the smartwatch",
-                "token-type":"string", 
-                "byte-size":10, 
+                "token-type":"string",
+                "byte-size":10,
                 "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [settings]
                 "optional": false
             },
