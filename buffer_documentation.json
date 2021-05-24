@@ -21,17 +21,48 @@
                 "description": "Parameter key for the setting chosen",
                 "token-type":"string",
                 "byte-size":12,
-                "regex-rule": "[a-zA-Z]*", // Correct input will be: [alarmClock]
+                "regex-rule": "[a-zA-Z]*", // Correct input will be: [brightness]
                 "optional": false
             },
             {
                 "name":"Smartwatch option parameter value",
                 "description": "Parameter value for the setting chosen",
-                "token-type":"string",
+                "token-type":"int",
                 "byte-size":6,
-                "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [true, false]
+                "regex-rule": "[0-9]*", // Correct inputs will be: [1, 2]
                 "optional": false
             }
+            ]
+        },
+        "2": {
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "prefix": "curl -X POST 'http://localhost:9080/'",
+            "buffer-tokens":[
+                {
+                    "name":"Smartwatch options",
+                    "description":"The settings of the smartwatch",
+                    "token-type":"string",
+                    "byte-size":10,
+                    "regex-rule": "[a-zA-Z]*", // Correct input will be: [settings]
+                    "optional": false
+                },
+                {
+                    "name":"Running Mode option",
+                    "description": "Running Mode option parameter key",
+                    "token-type":"string",
+                    "byte-size":10,
+                    "regex-rule": "[a-zA-Z]*", // Correct input will be: [running]
+                    "optional": false
+                },
+                {
+                    "name":"Running option parameter value",
+                    "description": "Parameter value for the setting chosen",
+                    "token-type":"string",
+                    "byte-size":128,
+                    "regex-rule": "[0-9]*", // Correct inputs will be: [1, 5, 10, 60, 120, etc.]
+                    "optional": false
+                }
             ]
         },
         "3":{
