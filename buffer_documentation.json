@@ -1,82 +1,171 @@
 {
-    // TODO: Edit this file
-    "device-name": "Rares Android",
-    "device-type": "IPCamera",
-    "buffers-count": 5,
+    "device-name": "Smartwatch IOT",
+    "device-type": "Smartwatch",
+    "buffers-count": 1,
     "input-buffers":{
         "1":{
-            "token-delimitators": "", //Symbol that separates the tokens in the buffer
-            "protocol": "HTTP", // The protocol used to communicate with this buffer
-            "prefix": "http://192.168.0.112:8080/", // The buffer requires that it is initialized with this content
-            "buffer-tokens":[// Description of each of the tokens that this buffer can receive. Think of them as the message's variables.
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "prefix": "curl -X POST 'http://localhost:9080/'",
+            "buffer-tokens":[
             {
-                "name":"Camera command",
-                "description":"Input that selects command",
-                "token-type":"string", // What type of token should be fuzzed in this position of the buffer
-                "byte-size":256, //Maximum size of the token
-                "regex-rule": "[a-zA-Z]*", // Optional parameter to guide fuzzer generator
-                "optional": false // Can the fuzzer give a null value on this token?
+                "name":"Smartwatch options",
+                "description":"The settings of the smartwatch",
+                "token-type":"string", 
+                "byte-size":10, 
+                "regex-rule": "[a-zA-Z]*", // Correct input will be: [settings]
+                "optional": false
             },
             {
-                "name":"Camera parameter",
-                "description": "Parameters for the command chosen",
+                "name":"Smartwatch option parameter key",
+                "description": "Parameter key for the setting chosen",
                 "token-type":"string",
-                "byte-size":256,
-                "regex-rule": "=[a-zA-Z0-9]*",
-                "optional": true
+                "byte-size":12,
+                "regex-rule": "[a-zA-Z]*", // Correct input will be: [alarmClock]
+                "optional": false
+            },
+            {
+                "name":"Smartwatch option parameter value",
+                "description": "Parameter value for the setting chosen",
+                "token-type":"string",
+                "byte-size":6,
+                "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [true, false]
+                "optional": false
             }
             ]
         },
-
-    // So basically above, we actually have a generic way of telling the fuzzer that it is going to fuzz
-    // a HTTP Get request, with one parameter. The buffer tokens described could very well fit any
-    // type of system that takes input through the HTTP protocol. How would a buffer that takes a string
-    // and a Base64 image as input through SSH?
-
-        "2":{
-            "token-delimitators": " ",
-            "protocol": "SSH",
-            "prefix": "ssh user@192.168.0.112 -p securePass",
+        "5":{
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "prefix": "curl -X POST 'http://localhost:9080/'",
             "buffer-tokens":[
-                {
-                    "name": "Program command",
-                    "description": "Program that is to be used",
-                    "token-type": "string",
-                    "byte-size":256,
-                    "regex-rule": "[a-z]*",
-                    "optional": "false"
-                },
-                {
-                    "name": "Image",
-                    "description": "A Base64 image",
-                    "token-type": "Base64",
-                    "byte-size":256,
-                    "regex-rule": "[^-A-Za-z0-9+/=]|=[^=]|={3,}$", // Stackoverflow approved
-                    "optional": false
-                }
+            {
+                "name":"Smartwatch options",
+                "description":"The settings of the smartwatch",
+                "token-type":"string", 
+                "byte-size":10, 
+                "regex-rule": "[a-zA-Z]*", // Correct input will be: [settings]
+                "optional": false
+            },
+            {
+                "name":"LowBattery option",
+                "description": "LowBattery option parameter key",
+                "token-type":"string",
+                "byte-size":10,
+                "regex-rule": "[a-zA-Z]*", // Correct input will be: [lowBattery]
+                "optional": false
+            },
+            {
+                "name":"LowBattery option parameter value",
+                "description": "Parameter value for the setting chosen",
+                "token-type":"string",
+                "byte-size":128,
+                "regex-rule": "[0-9]*", // Correct inputs will be: [100, 260, 680, 3000 etc.]
+                "optional": false
+            }
+            ]
+        },
+        "6":{
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "prefix": "curl -X POST 'http://localhost:9080/'",
+            "buffer-tokens":[
+            {
+                "name":"Smartwatch options",
+                "description":"The settings of the smartwatch",
+                "token-type":"string", 
+                "byte-size":10, 
+                "regex-rule": "[a-zA-Z]*", // Correct input will be: [settings]
+                "optional": false
+            },
+            {
+                "name":"Lantern option",
+                "description": "Lantern option parameter key",
+                "token-type":"string",
+                "byte-size":10,
+                "regex-rule": "[a-zA-Z]*", // Correct input will be: [lantern]
+                "optional": false
+            },
+            {
+                "name":"Lantern option parameter value",
+                "description": "Parameter value for the setting chosen",
+                "token-type":"string",
+                "byte-size":6,
+                "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [true, false]
+                "optional": false
+            }
             ]
         }
     },
     "output-buffers":{
         "1":{
-            "token-delimitators": " ",
+            "token-delimitators": "",
             "protocol": "HTTP",
-            "prefix": "http://192.168.0.112:8080/", // The buffer requires that it is initialized with this content
-            "caller":"remote", // Remote or Local. The caller variable describes who runs this buffer. Either
-// your app sends the data (local), or the data is requested by another device (remote)
+            "prefix": "curl -X GET 'http://localhost:9080/'",
             "buffer-tokens":[
             {
-                "name":"Get image",
-                "description":"Command that returns an image",
-                "token-type":"string", // What type of token should be fuzzed in this position of the buffer
-                "byte-size":256,
-                "regex-rule": "/image", // Optional parameter to guide fuzzer generator
-                "optional": false // Can the fuzzer give a null value on this token?
+                "name":"Smartwatch options",
+                "description":"The settings of the smartwatch",
+                "token-type":"string", 
+                "byte-size":10, 
+                "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [settings]
+                "optional": false
+            },
+            {
+                "name":"alarmClock and checkClock options",
+                "description": "alarmClock and checkClock parameters",
+                "token-type":"string",
+                "byte-size":12,
+                "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [alarmClock, checkClock]
+                "optional": false
+            }
+            ]
+        },
+        "5":{
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "prefix": "curl -X GET 'http://localhost:9080/'",
+            "buffer-tokens":[
+            {
+                "name":"Smartwatch options",
+                "description":"The settings of the smartwatch",
+                "token-type":"string", 
+                "byte-size":10, 
+                "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [settings]
+                "optional": false
+            },
+            {
+                "name":"Low battery option",
+                "description": "Low battery option parameter",
+                "token-type":"string",
+                "byte-size":10,
+                "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [lowBattery]
+                "optional": false
+            }
+            ]
+        },
+        "6":{
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "prefix": "curl -X GET 'http://localhost:9080/'",
+            "buffer-tokens":[
+            {
+                "name":"Smartwatch options",
+                "description":"The settings of the smartwatch",
+                "token-type":"string", 
+                "byte-size":10, 
+                "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [settings]
+                "optional": false
+            },
+            {
+                "name":"Lantern option",
+                "description": "Lantern option parameter",
+                "token-type":"string",
+                "byte-size":10,
+                "regex-rule": "[a-zA-Z]*", // Correct inputs will be: [lantern]
+                "optional": false
             }
             ]
         }
     }
 }
-
-
-
