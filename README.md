@@ -9,7 +9,7 @@ Componența echipei:
 Funcționalități smartwatch:
 1. Dacă este o oră fixă, atunci declanșează o vibrație
 2. Luminozitatea ecranului să fie în funcție de luminozitatea mediului
-3. Modul de alergare: Îți spune câți metrii ai alergat
+3. Modul de alergare: Îți spune câți metri ai alergat
 4. Modul de panică: dacă nu se mai fac pași pentru o perioadă lungă de timp, atunci esti întrebat dacă vrei să formezi un apel către 112
 5. Dacă nivelul bateriei este scăzut, atunci să se aprindă un led de notificare
 6. Dacă se apasă un buton lateral de pe ceas, atunci ecranul ceasului să devină alb (simulează o lanternă)
@@ -243,7 +243,7 @@ panicMode is set to 1. Value 1 means panicMode is activated and it will trigger 
 
 ```
 curl -X POST http://localhost:9080/settings/panicMode/8
-Please provide a value higher than 10.
+panicMode was set to false.
 ```
 
 Considerăm că perioada de timp în care utilizatorul nu mai face pași (între 180 de minute și 480 de minute) este asociată somnului.
