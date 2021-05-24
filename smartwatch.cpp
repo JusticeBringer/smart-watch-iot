@@ -104,6 +104,10 @@ private:
                      Routes::bind(&SmartwatchEndpoint::setPanicModeRoute, this));
         Routes::Get(router, "/settings/panicMode/", Routes::bind(&SmartwatchEndpoint::getPanicModeRoute, this));
 
+        Routes::Post(router, "/settings/triggerPanicMode/:value",
+                     Routes::bind(&SmartwatchEndpoint::setTriggerPanicModeRoute, this));
+        Routes::Get(router, "/settings/triggerPanicMode/", Routes::bind(&SmartwatchEndpoint::getTriggerPanicModeRoute, this));
+
         Routes::Post(router, "/settings/running/:value",
                      Routes::bind(&SmartwatchEndpoint::setRunningRoute, this));
         Routes::Get(router, "/settings/running/", Routes::bind(&SmartwatchEndpoint::getRunningRoute, this));
@@ -195,7 +199,7 @@ private:
 
             if (std::stoi(valueSetting) == 0) {
                 response.send(Http::Code::Ok,
-                              settingName + " is set to " + valueSetting + ". Value 0 means setting is off.");
+                                "CheckClock is disabled because alarmClock is also disabled. Please set alarmClock to true.");
             } else {
                 time_t now = time(0);
                 tm *ltm = localtime(&now);
@@ -221,23 +225,14 @@ private:
             val = value.as<int>();
         }
         swt.setBrightnessSetting(val);
-        if (val <= 0) {
-            response.send(Http::Code::Bad_Request, "The brightness must be higher than 0");
+        if (val < 0 || val > 100) {
+            response.send(Http::Code::Bad_Request, "Brightness must be a value between 0 and 100");
+            return;
+        } else if (val >= 0 && val <= 100) {
+            response.send(Http::Code::Ok, "Brightness is set to " + std::to_string(val));
             return;
         }
-        if (val <= 30) {
-            response.send(Http::Code::Ok, "The brightness is lower than 30. The value is " + std::to_string(val));
-            return;
-        }
-        if (val <= 70) {
-            response.send(Http::Code::Ok, "The brightness is lower than 70. The value is " + std::to_string(val));
-            return;
-        }
-        if (val <= 100) {
-            response.send(Http::Code::Ok, "The brightness is lower than 100. The value is " + std::to_string(val));
-            return;
-        }
-        response.send(Http::Code::Bad_Request, "The brightness must be lower than 101");
+        response.send(Http::Code::Bad_Request, "Brightness must be a value between 0 and 100");
 
     }
 
@@ -252,7 +247,7 @@ private:
                 .add<Header::ContentType>(MIME(Text, Plain));
 
         response.send(Http::Code::Ok,
-                      "Brightness  is set to " + std::to_string(value));
+                      "Brightness is set to " + std::to_string(value));
     }
 
     // Endpoint to configure the running setting
@@ -307,11 +302,10 @@ private:
                 .add<Header::ContentType>(MIME(Text, Plain));
 
         response.send(Http::Code::Ok,
-                      "Running time is set to " + std::to_string(value) + " minutes.");
-
+                      "Last running time was " + std::to_string(value) + " minutes.");
     }
 
-   // Endpoint to configure the panic mode setting
+    // Endpoint to configure the panic mode setting
     void setPanicModeRoute(const Rest::Request &request, Http::ResponseWriter response){
         string settingName = "panicMode";
 
@@ -325,15 +319,20 @@ private:
 
         int setResponse = swt.setPanicModeSetting(value);
 
-        if(setResponse == 1 ){
-            response.send(Http::Code::Ok, settingName + " was set to true. Call 112 in progress...");
-        }
-        else if(setResponse == 2 ){
+        if(setResponse == 0 ){
             response.send(Http::Code::Ok, settingName + " was set to false.");
         }
+        else if(setResponse == 1){
+            response.send(Http::Code::Ok, settingName + " was set to true. Button „Call for 112” will appear at need.");
+        }
+        else if (setResponse == 2){
+            response.send(Http::Code::Ok, "User is most probably sleeping.");
+        } 
+        else if (setResponse == 3) {
+            response.send(Http::Code::Ok, "Button „Call for 112” is being shown on screen.");
+        }
         else{
-            response.send(Http::Code::Bad_Request,
-                          settingName + " was not found and or " + std::to_string(value) + " was not a valid value ");
+            response.send(Http::Code::Bad_Request, settingName + "Please give a valid value.");
         }
     }
 
@@ -354,7 +353,54 @@ private:
                           settingName + " is set to " +std::to_string(valueSetting) + ". Value 0 means panicMode is off.");
         } else {
             response.send(Http::Code::Ok,
-                          settingName + " is set to " + std::to_string(valueSetting) + ". Value 1 means panicMode is on and there is an emergency call in progress.");
+                          settingName + " is set to " + std::to_string(valueSetting) + ". Value 1 means panicMode is activated and it will trigger at need");
+        }
+    }
+
+    void setTriggerPanicModeRoute(const Rest::Request &request, Http::ResponseWriter response){
+        string settingName = "triggerPanicMode";
+
+        Guard guard(SmartwatchLock);
+
+        int value = 0;
+        if (request.hasParam(":value")) {
+            auto val = request.param(":value");
+            value = val.as<int>();
+        }
+
+        int setResponse = swt.setTriggerPanicModeSetting(value);
+
+        if(setResponse == 0 ){
+            response.send(Http::Code::Ok, settingName + " was set to false.");
+        }
+        else if(setResponse == 1){
+            response.send(Http::Code::Ok, settingName + " was set to true. Button „Call for 112” triggered.");
+        }
+        else{
+            response.send(Http::Code::Bad_Request,
+                          settingName + " was not found and or " + std::to_string(value) + " was not a valid value ");
+        }
+    }
+    
+    void getTriggerPanicModeRoute(const Rest::Request &request, Http::ResponseWriter response) {
+        string settingName = "triggerPanicMode";
+
+        Guard guard(SmartwatchLock);
+
+        string valueSetting = swt.getTriggerPanicModeSetting();
+
+        using namespace Http;
+        response.headers()
+        .add<Header::Server>("pistache/0.1")
+        .add<Header::ContentType>(MIME(Text, Plain));
+
+        if (valueSetting == "disabled") {
+            response.send(Http::Code::Ok,"triggerPanicMode setting is disabled because panicMode is disabled. Please enable panicMode setting.");
+        } else if (valueSetting == "false") {
+            response.send(Http::Code::Ok, "Emergency call is not in progress...");
+        }
+        else if (valueSetting == "true") {
+            response.send(Http::Code::Ok, "Emergency call in progress...");
         }
     }
 
@@ -518,36 +564,63 @@ private:
 
         /* ------------------ 4 ------------------ */
 
-        //Setter for the panic mode setting
+        // Setter for the panic mode setting
         int setPanicModeSetting(int value){
-
-            if (value >0 && value <= 10){
+            if (value == 0) {
                 panicMode.value = false;
-                return 2;
+                return 0;
             }
 
+            if (value == 1) {
+                panicMode.value = true;
+                return 1;
+            }
+            
             // If user might be sleeping
             if (value >= 180 && value < 480){
                 panicMode.value = false;
                 return 2;
             }
 
-            // If user did not move for 10 minutes, he could be in danger
-            if ((value > 10 && value < 180) || value >= 480){
+            // If user did not move for certain amount of time, he could be in danger
+            if ((value >= 60 && value <= 180) || value > 480) {
                 panicMode.value = true;
-                return 1;
+                return 3;
             }
-
+        
             // otherwise we received a bad value
-            return 0;
-
+            return -1;
         }
 
         // Getter for the panic mode setting
         string getPanicModeSetting() {
-            if (panicMode.value == true)
-                return "1";
-            return "0";
+            return std::to_string(panicMode.value);
+        }
+
+        int setTriggerPanicModeSetting(int value) {
+            if (value == 0) {
+                panicMode.triggered = false;
+                return 0;
+            }
+
+            if (value == 1) {
+                panicMode.triggered = true;
+                return 1;
+            }
+        
+            // otherwise we received a bad value
+            return -1;
+        }
+
+        // Getter for the triggering panic mode setting
+        string getTriggerPanicModeSetting() {
+            if (panicMode.value == false) {
+                return "disabled";
+            }
+            if (panicMode.triggered) {
+                return "true";
+            }
+            return "false";
         }
 
         /* ------------------ 5 ------------------ */
@@ -618,6 +691,7 @@ private:
         // Definig panicMode setting - 4
         struct panicModeSetting{
             std::string name = "panicMode";
+            bool triggered = false;
             bool value = false;
         }panicMode;
 

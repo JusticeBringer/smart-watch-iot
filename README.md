@@ -124,6 +124,16 @@ alarmCLock is set to 1. Value 1 means setting is on.
 ```
 
 ```
+curl -X GET http://localhost:9080/settings/checkClock/
+Negative response it is not 11 sharp.
+```
+
+```
+curl -X GET http://localhost:9080/settings/checkClock/
+Positive response, it is 11 sharp.
+```
+
+```
 curl -X POST http://localhost:9080/settings/alarmClock/false
 alarmCLock was set to false
 ```
@@ -131,6 +141,11 @@ alarmCLock was set to false
 ```
 curl -X GET http://localhost:9080/settings/alarmClock/
 alarmCLock is set to 0. Value 0 means setting is off.
+```
+
+```
+curl -X GET http://localhost:9080/settings/checkClock/
+CheckClock is disabled because alarmClock is also disabled. Please set alarmClock to true.
 ```
 
 #### Functionality no. 2
@@ -157,7 +172,7 @@ Brightness  is set to 10
 #### Functionality no. 3
 
 ```
-3. Modul de alergare: Îți spune câți metrii ai alergat
+3. Modul de alergare: Îți spune câți metri ai alergat
 ```
 
 Routes:
@@ -190,7 +205,7 @@ Running time is set to 100 minutes.
 #### Functionality no. 4
 
 ```
-4.Modul de panică: dacă nu se mai fac pași pentru o perioadă lungă de timp (cel putin 10 minute), atunci esti întrebat dacă vrei să formezi un apel către 112
+4.Modul de panică: dacă nu se mai fac pași pentru o perioadă lungă de timp (cel puțin 10 minute), atunci ești întrebat dacă vrei să formezi un apel către 112
 ```
 
 Routes:
