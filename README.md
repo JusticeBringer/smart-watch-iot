@@ -124,6 +124,16 @@ alarmCLock is set to 1. Value 1 means setting is on.
 ```
 
 ```
+curl -X GET http://localhost:9080/settings/checkClock/
+Negative response it is not 11 sharp.
+```
+
+```
+curl -X GET http://localhost:9080/settings/checkClock/
+Positive response, it is 11 sharp.
+```
+
+```
 curl -X POST http://localhost:9080/settings/alarmClock/false
 alarmCLock was set to false
 ```
@@ -131,6 +141,11 @@ alarmCLock was set to false
 ```
 curl -X GET http://localhost:9080/settings/alarmClock/
 alarmCLock is set to 0. Value 0 means setting is off.
+```
+
+```
+curl -X GET http://localhost:9080/settings/checkClock/
+CheckClock is disabled because alarmClock is also disabled. Please set alarmClock to true.
 ```
 
 #### Functionality no. 2
@@ -147,17 +162,23 @@ GET  http://localhost:9080/settings/brightness/
 ```
 ```
 curl -X POST http://localhost:9080/settings/brightness/10
-The brightness is lower than 30. The value is 10
+Brightness was set to 10
 ```
 
 ```
 curl -X GET http://localhost:9080/settings/brightness/
 Brightness  is set to 10
 ```
+
+```
+curl -X POST http://localhost:9080/settings/brightness/200
+Brightness must be a value between 0 and 100
+```
+
 #### Functionality no. 3
 
 ```
-3. Modul de alergare: Îți spune câți metrii ai alergat
+3. Modul de alergare: Îți spune câți metri ai alergat
 ```
 
 Routes:
@@ -169,28 +190,28 @@ GET  http://localhost:9080/settings/running/
 
 ```
 curl -X POST http://localhost:9080/settings/running/10
-You run 1600 meters in 10 minutes.
+Running was set to 10 minutes.
 ```
 
 ```
 curl -X GET http://localhost:9080/settings/running
-Running time is set to 10 minutes.
+Last running time was 10 minutes and 1600 meters.
 ```
 
 ```
 curl -X POST http://localhost:9080/settings/running/100
-You run 11000 meters. You should rest.
+Running was set to 100 minutes.
 ```
 
 ```
 curl -X GET http://localhost:9080/settings/running    
-Running time is set to 100 minutes.
+Last running time was 100 minutes and 11000 meters. You should rest.
 ```
 
 #### Functionality no. 4
 
 ```
-4.Modul de panică: dacă nu se mai fac pași pentru o perioadă lungă de timp (cel putin 10 minute), atunci esti întrebat dacă vrei să formezi un apel către 112
+4.Modul de panică: dacă nu se mai fac pași pentru o perioadă lungă de timp (cel puțin 10 minute), atunci ești întrebat dacă vrei să formezi un apel către 112
 ```
 
 Routes:
@@ -201,7 +222,7 @@ GET  http://localhost:9080/settings/panicMode/
 ```
 
 ```
-curl -X POST http://localhost:9080/settings/panicMode/5
+curl -X POST http://localhost:9080/settings/panicMode/0
 panicMode was set to false.
 ```
 
@@ -211,25 +232,77 @@ panicMode is set to 0. Value 0 means panicMode is off.
 ```
 
 ```
-curl -X POST http://localhost:9080/settings/panicMode/15
-panicMode was set to true. Call 112 in progress...
+curl -X POST http://localhost:9080/settings/panicMode/1
+panicMode was set to true. Button „Call for 112” will appear at need.
 ```
 
 ```
 curl -X GET http://localhost:9080/settings/panicMode
-panicMode is set to 1. Value 1 means panicMode is on and there is an emergency call in progress.
+panicMode is set to 1. Value 1 means panicMode is activated and it will trigger at need
+```
+
+```
+curl -X POST http://localhost:9080/settings/panicMode/8
+Please provide a value higher than 10.
 ```
 
 Considerăm că perioada de timp în care utilizatorul nu mai face pași (între 180 de minute și 480 de minute) este asociată somnului.
 
 ```
 curl -X POST http://localhost:9080/settings/panicMode/180
+panicMode was set to false (this value is associated with sleep)
+```
+
+```
+curl -X GET http://localhost:9080/settings/panicMode
+panicMode is set to 0. Value 0 means panicMode is off.
+```
+
+Trigger la apelul de urgență se face la rutele:
+
+```
+POST http://localhost:9080/settings/triggerPanicMode/:value
+GET  http://localhost:9080/settings/triggerPanicMode/
+```
+
+```
+curl -X POST http://localhost:9080/settings/triggerPanicMode/0
+triggerPanicMode was set to false.
+```
+
+```
+curl -X POST http://localhost:9080/settings/panicMode/0
 panicMode was set to false.
 ```
 
 ```
 curl -X GET http://localhost:9080/settings/panicMode
 panicMode is set to 0. Value 0 means panicMode is off.
+```
+
+```
+curl -X GET http://localhost:9080/settings/triggerPanicMode
+triggerPanicMode setting is disabled because panicMode is disabled. Please enable panicMode setting.
+```
+
+```
+curl -X POST http://localhost:9080/settings/panicMode/1
+panicMode was set to true. Button „Call for 112” will appear at need.
+```
+
+```
+curl -X GET http://localhost:9080/settings/panicMode
+panicMode is set to 1. Value 1 means panicMode is activated and it will trigger at need
+```
+
+```
+curl -X POST http://localhost:9080/settings/triggerPanicMode/1
+triggerPanicMode was set to true. Button „Call for 112” triggered.
+```
+
+```
+curl -X GET http://localhost:9080/settings/triggerPanicMode
+Emergency call in progress...
 ```
 
 #### Functionality no. 5
