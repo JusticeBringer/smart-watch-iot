@@ -229,7 +229,7 @@ private:
             response.send(Http::Code::Bad_Request, "Brightness must be a value between 0 and 100");
             return;
         } else if (val >= 0 && val <= 100) {
-            response.send(Http::Code::Ok, "Brightness is set to " + std::to_string(val));
+            response.send(Http::Code::Ok, "Brightness was set to " + std::to_string(val));
             return;
         }
         response.send(Http::Code::Bad_Request, "Brightness must be a value between 0 and 100");
@@ -264,45 +264,43 @@ private:
         // Setting the Smartwatch's setting to value
         int setResponse = swt.setRunningSetting(val);
 
-        // Sending some confirmation or error response.
-        if (setResponse == 1) {
-            if (val > 1 && val <= 10) {
-                distance = val * 160;
-                response.send(Http::Code::Ok,
-                              "You run " + std::to_string(distance) + " meters in " + std::to_string(val) + " minutes.");
-                return;
-            }
-
-            if (val > 10 && val <= 60) {
-                distance = val * 130;
-                response.send(Http::Code::Ok,
-                              "You run " + std::to_string(distance) + " meters in " + std::to_string(val) + " minutes.");
-                return;
-            }
-
-            if (val > 60) {
-                distance = val * 110;
-                response.send(Http::Code::Ok, "You run " + std::to_string(distance) + " meters. You should rest.");
-                return;
-            }
-        } else {
-            response.send(Http::Code::Bad_Request,
-                          settingName + "Error calculator. Invalid value");
-        }
+        response.send(Http::Code::Ok, "Running was set to " + std::to_string(val) + " minutes.");
+        return;        
     }
 
     void getRunningRoute(const Rest::Request &request, Http::ResponseWriter response){
         Guard guard(SmartwatchLock);
 
-        int value = swt.getRunningSetting();
+        int val = swt.getRunningSetting();
 
         using namespace Http;
         response.headers()
                 .add<Header::Server>("pistache/0.1")
                 .add<Header::ContentType>(MIME(Text, Plain));
 
-        response.send(Http::Code::Ok,
-                      "Last running time was " + std::to_string(value) + " minutes.");
+        int distance = 0;
+        if (val > 1 && val <= 10) {
+                distance = val * 160;
+                response.send(Http::Code::Ok,
+                              "Last running time was " + std::to_string(val) + " minutes and " + std::to_string(distance) + " meters.");
+                return;
+            }
+
+        if (val > 10 && val <= 60) {
+            distance = val * 130;
+            response.send(Http::Code::Ok,
+                            "Last running time was " + std::to_string(val) + " minutes and " + std::to_string(distance) + " meters.");
+            return;
+        }
+
+        if (val > 60) {
+            distance = val * 110;
+            response.send(Http::Code::Ok,
+                    "Last running time was " + std::to_string(val) + " minutes and " + std::to_string(distance) + " meters. You should rest.");
+            return;
+        }
+
+        response.send(Http::Code::Ok, "Please set a running time");
     }
 
     // Endpoint to configure the panic mode setting
@@ -326,13 +324,13 @@ private:
             response.send(Http::Code::Ok, settingName + " was set to true. Button „Call for 112” will appear at need.");
         }
         else if (setResponse == 2){
-            response.send(Http::Code::Ok, "User is most probably sleeping.");
+            response.send(Http::Code::Ok, settingName + " was set to false (this value is associated with sleep)");
         } 
         else if (setResponse == 3) {
             response.send(Http::Code::Ok, "Button „Call for 112” is being shown on screen.");
         }
         else{
-            response.send(Http::Code::Bad_Request, settingName + "Please give a valid value.");
+            response.send(Http::Code::Bad_Request, "Please provide a value higher than 10.");
         }
     }
 
@@ -604,6 +602,10 @@ private:
             }
 
             if (value == 1) {
+                if (panicMode.value == false) {
+                    panicMode.triggered = false;
+                    return 0;
+                }
                 panicMode.triggered = true;
                 return 1;
             }
