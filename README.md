@@ -371,6 +371,13 @@ curl -X GET http://localhost:9080/settings/lantern/
 lantern is set to 0. Value 0 means setting is off.
 ```
 
+#### Run brightness script.py
+
+```
+ python3 script.py
+```
+
+
 ## License
 
 This project is licensed under the Apache 2.0 Open Source Licence - see the [LICENSE](LICENSE) file for details
